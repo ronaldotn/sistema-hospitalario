@@ -1,0 +1,45 @@
+{
+  "include": [
+    "./vite.config.*",
+    "./resources/js/**/*",
+    "./resources/js/**/*.vue",
+    "./themeConfig.js"
+  ],
+  "exclude": [
+    "./public/build",
+    "./node_modules"
+  ],
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "Bundler",
+    "jsx": "preserve",
+    "paths": {
+      "@/*": [
+        "./resources/js/*"
+      ],
+      "@layouts/*": [
+        "./resources/js/@layouts/*"
+      ],
+      "@layouts": [
+        "./resources/js/@layouts"
+      ],
+      "@core/*": [
+        "./resources/js/@core/*"
+      ],
+      "@core": [
+        "./resources/js/@core"
+      ],
+      "@images/*": [
+        "./resources/assets/images/*"
+      ],
+      "@styles/*": [
+        "./resources/css/*"
+      ]
+    },
+    "types": [
+      "vite/client",
+      "vite-plugin-vue-layouts/client"
+    ]
+  }
+}
