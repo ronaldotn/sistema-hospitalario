@@ -15,19 +15,14 @@ class BaseController extends Controller
      * @param int    $code      Código de respuesta HTTP (por defecto 200)
      * @return JsonResponse
      */
-    public function sendResponse($data, $message, $code = 200): JsonResponse
+    public function sendResponse($data, $message, $code = 200, $status = 'success'): JsonResponse
     {
         return response()->json([
-            'status'  => 'success',
-            'code'    => 200,
-            'message' => 'Conexión exitosa',
-            'resultado' => [
-                'status'  => 'success',
-                'code'    => $code,
-                'message' => $message,
-                'data'    => $data,
-            ],
-        ], 200);
+            'status'  => $status,
+            'code'    => $code,
+            'message' => $message,
+            'result' => $data,
+        ], $code);
     }
 
     /**
@@ -36,19 +31,16 @@ class BaseController extends Controller
      * @param string $message        Mensaje de error
      * @param array  $errorMessages  Errores adicionales (opcional)
      * @param int    $code           Código de error (por defecto 400)
+     * @param int    $status         Estado de Codigo (por defecto warning)
      * @return JsonResponse
      */
-    public function sendError($message, $errorMessages = [], $code = 400): JsonResponse
+    public function sendError($message, $errorMessages = [], $code = 400, $status = 'warning'): JsonResponse
     {
         return response()->json([
-            'status'  => 'success',
-            'code'    => 200,
-            'message' => 'Conexión exitosa',
-            'resultado' => [
-                'status'  => 'danger',
-                'code'    => $code,
-                'message' => is_array($errorMessages) ? implode(' ', $errorMessages) : $message,
-            ],
-        ], 200);
+            'status'  => $status,
+            'code'    => $code,
+            'message' => $message,
+            'result' => is_array($errorMessages) ? implode(' ', $errorMessages) : $message,
+        ], $code);
     }
 }

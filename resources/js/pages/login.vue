@@ -1,8 +1,13 @@
 <script setup>
+import { useRouter } from 'vue-router'
 import AuthProvider from '@/views/pages/authentication/AuthProvider.vue'
 import logo from '@images/logo.svg?raw'
 import authV1BottomShape from '@images/svg/auth-v1-bottom-shape.svg?url'
 import authV1TopShape from '@images/svg/auth-v1-top-shape.svg?url'
+import { ErrorToast, SuccessToast } from '@/composables/Toast'
+import { useAuthStore } from '@/stores/auth'
+
+const auth = useAuthStore()
 
 const form = ref({
   email: '',
@@ -11,6 +16,27 @@ const form = ref({
 })
 
 const isPasswordVisible = ref(false)
+const errors = ref(null)
+const router = useRouter()
+
+const handleSubmit = () => {
+  auth
+    .login(form.value.email, form.value.password, form.value.remember)
+    .then( response => {
+      // email.value = ''
+      // password.value = ''
+      auth.setUserToken(response.result.token)
+      SuccessToast(response.message)
+      router.push({ name: 'dashboard' })
+    })
+    .catch( err => {
+      if ('status' in err && err.status === 401) {
+        ErrorToast(err.message)
+      } else {
+        errors.value = err.message
+      }
+    })
+}
 </script>
 
 <template>
@@ -19,13 +45,13 @@ const isPasswordVisible = ref(false)
       <!-- 👉 Top shape -->
       <VImg
         :src="authV1TopShape"
-        class="text-primary auth-v1-top-shape d-none d-sm-block"
+        class="position-absolute text-primary auth-v1-top-shape d-none d-sm-block"
       />
 
       <!-- 👉 Bottom shape -->
       <VImg
         :src="authV1BottomShape"
-        class="text-primary auth-v1-bottom-shape d-none d-sm-block"
+        class="position-absolute text-primary auth-v1-bottom-shape d-none d-sm-block"
       />
 
       <!-- 👉 Auth Card -->
@@ -44,30 +70,30 @@ const isPasswordVisible = ref(false)
               class="d-flex"
               v-html="logo"
             />
-            <h1 class="app-logo-title">
-              sneat
+            <h1>
+              HCEi
             </h1>
           </RouterLink>
         </VCardItem>
 
         <VCardText>
           <h4 class="text-h4 mb-1">
-            Welcome to Sneat! 👋🏻
+            Historia Clínica Electrónica! 📖
           </h4>
           <p class="mb-0">
-            Please sign-in to your account and start the adventure
+            Proyecto estratégico en el ámbito de Salud Digital
           </p>
         </VCardText>
 
         <VCardText>
-          <VForm @submit.prevent="$router.push('/')">
+          <VForm @submit.prevent="handleSubmit">
             <VRow>
               <!-- email -->
               <VCol cols="12">
                 <VTextField
                   v-model="form.email"
                   autofocus
-                  label="Email or Username"
+                  label="Correo electronico"
                   type="email"
                   placeholder="johndoe@email.com"
                 />
@@ -77,7 +103,7 @@ const isPasswordVisible = ref(false)
               <VCol cols="12">
                 <VTextField
                   v-model="form.password"
-                  label="Password"
+                  label="Contraseña"
                   placeholder="············"
                   :type="isPasswordVisible ? 'text' : 'password'"
                   autocomplete="password"
@@ -89,14 +115,14 @@ const isPasswordVisible = ref(false)
                 <div class="d-flex align-center justify-space-between flex-wrap my-6">
                   <VCheckbox
                     v-model="form.remember"
-                    label="Remember me"
+                    label="Recuérdame"
                   />
 
                   <a
                     class="text-primary"
                     href="javascript:void(0)"
                   >
-                    Forgot Password?
+                    Olvidó su contraseña?
                   </a>
                 </div>
 
@@ -115,13 +141,13 @@ const isPasswordVisible = ref(false)
                 class="text-body-1 text-center"
               >
                 <span class="d-inline-block">
-                  New on our platform?
+                  ¿Eres nuevo en nuestra plataforma?
                 </span>
                 <RouterLink
                   class="text-primary ms-1 d-inline-block text-body-1"
                   to="/register"
                 >
-                  Create an account
+                  Crear una cuenta
                 </RouterLink>
               </VCol>
 

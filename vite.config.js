@@ -28,47 +28,37 @@ export default defineConfig({
       dirs: ["resources/js/@core/components", "resources/js/components"],
       dts: true,
       resolvers: [
-        (componentName) => {
+        componentName => {
           // Auto import `VueApexCharts`
-          if (componentName === "VueApexCharts")
-            return {
-              name: "default",
-              from: "vue3-apexcharts",
-              as: "VueApexCharts",
-            };
+          if (componentName === 'VueApexCharts')
+            return { name: 'default', from: 'vue3-apexcharts', as: 'VueApexCharts' }
         },
       ],
     }),
 
     // Docs: https://github.com/antfu/unplugin-auto-import#unplugin-auto-import
     AutoImport({
-      imports: ["vue", "vue-router", "@vueuse/core", "@vueuse/math", "pinia"],
+      imports: ['vue', 'vue-router', '@vueuse/core', '@vueuse/math', 'pinia'],
       vueTemplate: true,
 
       // ℹ️ Disabled to avoid confusion & accidental usage
-      ignore: ["useCookies", "useStorage"],
+      ignore: ['useCookies', 'useStorage'],
       eslintrc: {
         enabled: true,
-        filepath: "./.eslintrc-auto-import.json",
+        filepath: './.eslintrc-auto-import.json',
       },
     }),
     svgLoader(),
   ],
-  define: { "process.env": {} },
+  define: { 'process.env': {} },
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./resources/js", import.meta.url)),
       "@core": fileURLToPath(new URL("./resources/js/@core", import.meta.url)),
-      "@layouts": fileURLToPath(
-        new URL("./resources/js/@layouts", import.meta.url)
-      ),
-      "@images": fileURLToPath(
-        new URL("./resources/assets/images/", import.meta.url)
-      ),
+      "@layouts": fileURLToPath(new URL("./resources/js/@layouts", import.meta.url)),
+      "@images": fileURLToPath(new URL("./resources/assets/images/", import.meta.url)),
       "@styles": fileURLToPath(new URL("./resources/css/", import.meta.url)),
-      "@configured-variables": fileURLToPath(
-        new URL("./resources/css/variables/_template.scss", import.meta.url)
-      ),
+      "@configured-variables": fileURLToPath(new URL("./resources/css/variables/_template.scss", import.meta.url)),
     },
   },
   build: {
@@ -78,4 +68,4 @@ export default defineConfig({
     exclude: ["vuetify"],
     entries: ["./resources/js/**/*.vue"],
   },
-});
+})
