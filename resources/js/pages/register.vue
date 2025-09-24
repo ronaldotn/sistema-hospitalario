@@ -1,17 +1,45 @@
 <script setup>
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { WarningToast, SuccessToast } from '@/composables/Toast'
 import AuthProvider from '@/views/pages/authentication/AuthProvider.vue'
 import logo from '@images/logo.svg?raw'
 import authV1BottomShape from '@images/svg/auth-v1-bottom-shape.svg?url'
 import authV1TopShape from '@images/svg/auth-v1-top-shape.svg?url'
 
+const auth = useAuthStore()
+const router = useRouter()
+
 const form = ref({
-  username: '',
+  name: '',
   email: '',
   password: '',
+  password_confirmation: '',
   privacyPolicies: false,
 })
 
 const isPasswordVisible = ref(false)
+const isPasswordConfirmationVisible = ref(false)
+
+const errors = ref(null)
+
+const handleSubmit = () => {
+  auth
+    .register(form.value.name, form.value.email, form.value.password, form.value.password_confirmation)
+    .then( response => {
+      console.log(response)
+      SuccessToast(response.message.result)
+      //router.push({ name: 'login' })
+    })
+    .catch( err => {
+      console.log(err)
+      if (err?.status === 409) {
+        WarningToast(err.message.result)
+      } else {
+        errors.value = err.message
+      }
+    })
+}
 </script>
 
 <template>
@@ -20,13 +48,13 @@ const isPasswordVisible = ref(false)
       <!-- 👉 Top shape -->
       <VImg
         :src="authV1TopShape"
-        class="text-primary auth-v1-top-shape d-none d-sm-block"
+        class="position-absolute text-primary auth-v1-top-shape d-none d-sm-block"
       />
 
       <!-- 👉 Bottom shape -->
       <VImg
         :src="authV1BottomShape"
-        class="text-primary auth-v1-bottom-shape d-none d-sm-block"
+        class="position-absolute text-primary auth-v1-bottom-shape d-none d-sm-block"
       />
 
       <!-- 👉 Auth card -->
@@ -45,53 +73,66 @@ const isPasswordVisible = ref(false)
               class="d-flex"
               v-html="logo"
             />
-            <h1 class="app-logo-title">
-              sneat
+            <h1>
+              HCEi
             </h1>
           </RouterLink>
         </VCardItem>
 
         <VCardText>
           <h4 class="text-h4 mb-1">
-            Adventure starts here 🚀
+            La aventura comienza aquí 🚀
           </h4>
           <p class="mb-0">
-            Make your app management easy and fun!
+            Proyecto estratégico en el ámbito de Salud Digital
           </p>
         </VCardText>
 
         <VCardText>
-          <VForm @submit.prevent="$router.push('/')">
+          <VForm @submit.prevent="handleSubmit">
             <VRow>
               <!-- Username -->
               <VCol cols="12">
                 <VTextField
-                  v-model="form.username"
+                  v-model="form.name"
                   autofocus
-                  label="Username"
-                  placeholder="Johndoe"
+                  label="Nombres"
+                  placeholder="John doe"
                 />
               </VCol>
               <!-- email -->
               <VCol cols="12">
                 <VTextField
                   v-model="form.email"
-                  label="Email"
+                  label="Correo electronico"
                   type="email"
                   placeholder="johndoe@email.com"
+                />
+              </VCol>
+
+              <!-- email -->
+              <VCol cols="12">
+                <VTextField
+                  v-model="form.password"
+                  label="Contraseña"
+                  autocomplete="password"
+                  placeholder="············"
+                  :type="isPasswordVisible ? 'text' : 'password'"
+                  :append-inner-icon="isPasswordVisible ? 'bx-hide' : 'bx-show'"
+                  @click:append-inner="isPasswordVisible = !isPasswordVisible"
                 />
               </VCol>
 
               <!-- password -->
               <VCol cols="12">
                 <VTextField
-                  v-model="form.password"
-                  label="Password"
-                  autocomplete="password"
+                  v-model="form.password_confirmation"
+                  label="Confirmar Contraseña"
+                  autocomplete="password_confirmation"
                   placeholder="············"
-                  :type="isPasswordVisible ? 'text' : 'password'"
-                  :append-inner-icon="isPasswordVisible ? 'bx-hide' : 'bx-show'"
-                  @click:append-inner="isPasswordVisible = !isPasswordVisible"
+                  :type="isPasswordConfirmationVisible ? 'text' : 'password'"
+                  :append-inner-icon="isPasswordConfirmationVisible ? 'bx-hide' : 'bx-show'"
+                  @click:append-inner="isPasswordConfirmationVisible = !isPasswordConfirmationVisible"
                 />
 
                 <div class="d-flex align-center my-6">
@@ -104,11 +145,11 @@ const isPasswordVisible = ref(false)
                     for="privacy-policy"
                     style="opacity: 1;"
                   >
-                    <span class="me-1 text-high-emphasis">I agree to</span>
+                    <span class="me-1 text-high-emphasis">Estoy de acuerdo</span>
                     <a
                       href="javascript:void(0)"
                       class="text-primary"
-                    >privacy policy & terms</a>
+                    >política de privacidad & condiciones</a>
                   </VLabel>
                 </div>
 
@@ -116,7 +157,7 @@ const isPasswordVisible = ref(false)
                   block
                   type="submit"
                 >
-                  Sign up
+                  Inscribirse
                 </VBtn>
               </VCol>
 
@@ -125,12 +166,12 @@ const isPasswordVisible = ref(false)
                 cols="12"
                 class="text-center text-base"
               >
-                <span>Already have an account?</span>
+                <span>¿Ya tienes una cuenta?</span>
                 <RouterLink
                   class="text-primary ms-1"
                   to="/login"
                 >
-                  Sign in instead
+                  Inicie sesión
                 </RouterLink>
               </VCol>
 

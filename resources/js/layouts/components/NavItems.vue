@@ -20,7 +20,6 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
         to: '/dashboard',
       }"
     />
-
   </VerticalNavGroup>
 
   <!-- 👉 Apps & Pages -->

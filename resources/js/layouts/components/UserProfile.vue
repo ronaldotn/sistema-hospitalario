@@ -1,5 +1,22 @@
 <script setup>
+import { useRouter } from 'vue-router'
 import avatar1 from '@images/avatars/avatar-1.png'
+import { useAuthStore } from '@/stores/auth'
+import { SuccessToast } from '@/composables/Toast'
+
+const router = useRouter()
+const auth = useAuthStore()
+
+const logout = () => {
+  console.log('logout')
+  auth
+    .logout()
+    .then( response => {
+      auth.removeUserToken()
+      SuccessToast(response.message)
+      router.push({ name: 'login' })
+    })
+}
 </script>
 
 <template>
@@ -110,7 +127,7 @@ import avatar1 from '@images/avatars/avatar-1.png'
           <VDivider class="my-2" />
 
           <!-- 👉 Logout -->
-          <VListItem to="/login">
+          <VListItem @click="logout" link>
             <template #prepend>
               <VIcon
                 class="me-2"

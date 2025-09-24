@@ -20,7 +20,7 @@ class AuthController extends BaseController
             'password'  => 'required|string|min:4|confirmed',
         ]);
         if ($validator->fails()) {
-            return $this->sendError('Error de validación.', $validator->errors()->all(), 401);
+            return $this->sendError('Error de validación.', $validator->errors()->all(), 409);
         }
         $user = User::create([
             'name'      => $request->name,
@@ -68,16 +68,6 @@ class AuthController extends BaseController
         Auth::user()->tokens->each(function ($token) {
             $token->forceDelete();
         });
-        $response = [
-            'status' => 'success',
-            'code' => 200,
-            'message' => 'Conexión exitosa',
-            'resultado' => [
-                'status' => 'success',
-                'code' => 200,
-                'message' => 'Sesión finalizada.',
-            ]
-        ];
-        return response()->json( $response, 200);
+        return $this->sendResponse([], 'Sesión finalizada.');
     }
 }
