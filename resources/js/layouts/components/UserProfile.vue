@@ -127,7 +127,10 @@ const logout = () => {
           <VDivider class="my-2" />
 
           <!-- 👉 Logout -->
-          <VListItem @click="logout" link>
+          <VListItem
+            link
+            @click="logout"
+          >
             <template #prepend>
               <VIcon
                 class="me-2"

@@ -29,7 +29,7 @@ const handleSubmit = () => {
     .then( response => {
       console.log(response)
       SuccessToast(response.message.result)
-      //router.push({ name: 'login' })
+      router.push({ name: 'login' })
     })
     .catch( err => {
       console.log(err)

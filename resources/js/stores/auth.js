@@ -42,12 +42,10 @@ export const useAuthStore = defineStore('auth', {
       try {
         
         const response = await Axios.post('register', user)
-
-        console.log(response)
-
+        
         return response.data
       } catch (ex) {
-        console.log(ex)
+        
         const error = { status: ex.status, message: ex.response.data }
 
         return Promise.reject(error)
