@@ -21,6 +21,34 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
       }"
     />
   </VerticalNavGroup>
+  <!-- 👉 Patients -->
+  <VerticalNavGroup
+    :item="{
+      title: 'Patients',
+      badgeContent: '5',
+      badgeClass: 'bg-error',
+      icon: 'bx-home-smile',
+    }"
+  >
+    <VerticalNavLink
+      :item="{
+        title: 'Show Patients',
+        to: '/patients/index',
+      }"
+    />
+    <VerticalNavLink
+      :item="{
+        title: 'Create Patient',
+        to: '/patients/create',
+      }"
+    />
+    <VerticalNavLink
+      :item="{
+        title: 'Edit Patient',
+        to: '/patients/edit',
+      }"
+    />
+  </VerticalNavGroup>
 
   <!-- 👉 Apps & Pages -->
   <VerticalNavSectionTitle

@@ -13,10 +13,15 @@ class PatientController extends BaseController
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        //
-    }
+ public function index()
+{
+    $patients = Patient::all();
+    return response()->json([
+        'message' => 'Lista de pacientes',
+        'data' => $patients
+    ], 200);
+}
+
 
     /**
      * Store a newly created resource in storage.
