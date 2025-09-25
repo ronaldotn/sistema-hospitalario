@@ -12,7 +12,7 @@ export const usePatientStore = defineStore("patient", () => {
     error.value = null;
     try {
       const response = await Axios.get("patients");
-      patients.value = response.data.data;
+      patients.value = response.data.result;
     } catch (err) {
       error.value = err.response?.data?.message || err.message;
     } finally {
@@ -23,7 +23,7 @@ export const usePatientStore = defineStore("patient", () => {
   const createPatient = async (form) => {
     try {
       const response = await Axios.post("patients", form);
-      patients.value.push(response.data.data);
+      patients.value.push(response.data.result);
       return response.data;
     } catch (err) {
       throw err;
