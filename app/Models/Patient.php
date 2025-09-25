@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 
@@ -43,6 +45,20 @@ class Patient extends Model
     {
         static::creating(function ($patient) {
             $patient->uuid = (string) Str::uuid();
+        });
+    }
+      // ✅ Accessor para calcular la edad automáticamente
+    public function getEdadAttribute()
+    {
+        if (!$this->fecha_nacimiento) return null;
+        return Carbon::parse($this->fecha_nacimiento)->age;
+    }
+        // ✅ Método para obtener todos los pacientes con edad
+    public static function allWithAge()
+    {
+        return self::all()->map(function ($p) {
+            $p->edad = $p->edad; // usa el accessor
+            return $p;
         });
     }
 }

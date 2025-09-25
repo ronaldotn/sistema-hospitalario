@@ -32,10 +32,11 @@ onMounted(() => {
       <thead>
         <tr>
           <th>Nombre</th>
+          <th>Dni</th>
           <th>Edad</th>
-          <th>Condición</th>
-          <th>Última Visita</th>
-          <th>Estado</th>
+          <th>Sexo</th>
+          <th>Direccion</th>
+          <th>Contacto</th>
           <th>Acciones</th>
         </tr>
       </thead>
@@ -43,10 +44,11 @@ onMounted(() => {
       <tbody>
         <tr v-for="p in patientStore.patients" :key="p.uuid">
           <td>{{ p.nombre }} {{ p.apellidos }}</td>
-          <td>{{ p.age }}</td>
-          <td>{{ p.condition }}</td>
-          <td>{{ p.lastVisit }}</td>
-          <td>{{ p.status }}</td>
+          <td>{{ p.documento_identidad }}</td>
+          <td>{{ p.edad }}</td>
+          <td>{{ p.sexo }}</td>
+          <td>{{ p.direccion }}</td>
+          <td>{{ p.contacto }}</td>
           <td>
             <VBtn
               icon

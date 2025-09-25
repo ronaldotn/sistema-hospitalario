@@ -13,11 +13,12 @@ class PatientController extends BaseController
     /**
      * Display a listing of the resource.
      */
+    // ✅ Método para obtener todos los pacientes con edad
  public function index()
 {
-    $patients = Patient::all();
+    $patients = Patient::allWithAge(); // llamamos al método del modelo
     return response()->json([
-        'message' => 'Lista de pacientes',
+        'message' => 'Lista de pacientes con edad',
         'data' => $patients
     ], 200);
 }
@@ -27,7 +28,7 @@ class PatientController extends BaseController
      * Store a newly created resource in storage.
      */
 
-   public function store(Request $request)
+    public function store(Request $request)
     {
         // Paso 1: Validar los datos de entrada
         try {
@@ -52,8 +53,8 @@ class PatientController extends BaseController
         $existingPatient = Patient::where('documento_identidad', $validatedData['documento_identidad'])
             ->orWhere(function ($query) use ($validatedData) {
                 $query->where('nombre', $validatedData['nombre'])
-                      ->where('apellidos', $validatedData['apellidos'])
-                      ->where('fecha_nacimiento', $validatedData['fecha_nacimiento']);
+                    ->where('apellidos', $validatedData['apellidos'])
+                    ->where('fecha_nacimiento', $validatedData['fecha_nacimiento']);
             })->first();
 
         if ($existingPatient) {
@@ -95,9 +96,9 @@ class PatientController extends BaseController
      */
     public function show(string $uuid)
     {
-         
+
         $patient = Patient::where('uuid', $uuid)->first();
-// dd($patient);
+        // dd($patient);
         if (!$patient) {
             return response()->json(['message' => 'Paciente no encontrado'], 404);
         }
@@ -106,7 +107,6 @@ class PatientController extends BaseController
             'message' => 'Paciente encontrado',
             'data' => $patient
         ], 200);
-
     }
 
 
