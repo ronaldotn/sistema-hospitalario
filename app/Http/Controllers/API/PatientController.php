@@ -14,14 +14,14 @@ class PatientController extends BaseController
      * Display a listing of the resource.
      */
     // ✅ Método para obtener todos los pacientes con edad
- public function index()
-{
-    $patients = Patient::allWithAge(); // llamamos al método del modelo
-    return response()->json([
-        'message' => 'Lista de pacientes con edad',
-        'data' => $patients
-    ], 200);
-}
+    public function index()
+    {
+        $patients = Patient::allWithAge(); // llamamos al método del modelo
+        return response()->json([
+            'message' => 'Lista de pacientes con edad',
+            'data' => $patients
+        ], 200);
+    }
 
 
     /**
@@ -119,11 +119,31 @@ class PatientController extends BaseController
         //
     }
 
+
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Patient $patient)
+    public function destroy(string $uuid)
     {
-        //
+        // Buscar paciente por UUID
+        $patient = Patient::where('uuid', $uuid)->first();
+
+        if (!$patient) {
+            return response()->json([
+                'message' => 'Paciente no encontrado'
+            ], 404);
+        }
+
+        try {
+            $patient->delete(); // Eliminamos el registro
+            return response()->json([
+                'message' => 'Paciente eliminado exitosamente'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error eliminando paciente',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

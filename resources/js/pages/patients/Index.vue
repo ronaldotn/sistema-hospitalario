@@ -1,12 +1,30 @@
 <script setup>
-import { onMounted } from "vue";
-import { usePatientStore } from "@/stores/patient";
+import { ref, onMounted } from 'vue'
+import { usePatientStore } from '@/stores/patient'
+import ConfirmModal from '@/components/ConfirmModal.vue'
 
-const patientStore = usePatientStore();
+const patientStore = usePatientStore()
+
+// Estado del modal
+const modalOpen = ref(false)
+const patientToDelete = ref(null)
+
+// Abrir modal desde botón eliminar
+const confirmDelete = uuid => {
+  patientToDelete.value = uuid
+  modalOpen.value = true
+}
+
+// Ejecutar eliminación solo si se confirma
+const handleDelete = () => {
+  if (!patientToDelete.value) return
+  patientStore.deletePatient(patientToDelete.value)
+  patientToDelete.value = null
+}
 
 onMounted(() => {
-  patientStore.fetchPatients(); // solo llamamos al store
-});
+  patientStore.fetchPatients()
+})
 </script>
 
 <template>
@@ -14,17 +32,7 @@ onMounted(() => {
     <VCard class="mb-6">
       <VCardTitle class="d-flex align-center justify-space-between">
         <h2>Lista de Pacientes</h2>
-        <VBtn
-          color="primary"
-          @click="
-            addPatient({
-              /* datos */
-            })
-          "
-        >
-          <VIcon start icon="bx-plus" />
-          Agregar Paciente
-        </VBtn>
+        <!-- aquí iría tu botón para agregar -->
       </VCardTitle>
     </VCard>
 
@@ -35,12 +43,11 @@ onMounted(() => {
           <th>Dni</th>
           <th>Edad</th>
           <th>Sexo</th>
-          <th>Direccion</th>
+          <th>Dirección</th>
           <th>Contacto</th>
           <th>Acciones</th>
         </tr>
       </thead>
-
       <tbody>
         <tr v-for="p in patientStore.patients" :key="p.uuid">
           <td>{{ p.nombre }} {{ p.apellidos }}</td>
@@ -50,20 +57,14 @@ onMounted(() => {
           <td>{{ p.direccion }}</td>
           <td>{{ p.contacto }}</td>
           <td>
-            <VBtn
-              icon
-              size="small"
-              color="info"
-              @click="editPatient(patient.uuid)"
-              class="me-2"
-            >
+            <VBtn icon size="small" color="info" class="me-2">
               <VIcon icon="bx-edit" />
             </VBtn>
             <VBtn
               icon
               size="small"
               color="error"
-              @click="deletePatient(patient.uuid)"
+              @click="confirmDelete(p.uuid)"
             >
               <VIcon icon="bx-trash" />
             </VBtn>
@@ -71,5 +72,14 @@ onMounted(() => {
         </tr>
       </tbody>
     </VTable>
+
+    <!-- Modal reutilizable -->
+    <ConfirmModal
+      v-model="modalOpen"
+      type="eliminar"
+      title="Eliminar Paciente"
+      message="¿Seguro que deseas eliminar este paciente?"
+      @confirmed="handleDelete"
+    />
   </div>
 </template>

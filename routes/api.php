@@ -14,4 +14,5 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 Route::post('/patients', [PatientController::class, 'store']);
 Route::get('/patients', [PatientController::class, 'index']);
+Route::delete('/patients/{uuid}', [PatientController::class, 'destroy']);
 Route::get('/patients/{uuid}', [PatientController::class, 'show']);
