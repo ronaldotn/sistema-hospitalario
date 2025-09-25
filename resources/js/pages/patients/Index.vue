@@ -21,7 +21,6 @@ const handleDelete = () => {
   patientStore.deletePatient(patientToDelete.value)
   patientToDelete.value = null
 }
-
 onMounted(() => {
   patientStore.fetchPatients()
 })
