@@ -1,29 +1,37 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { usePatientStore } from '@/stores/patient'
-import ConfirmModal from '@/components/ConfirmModal.vue'
+import { ref, onMounted } from "vue";
+import { usePatientStore } from "@/stores/patient";
+import ConfirmModal from "@/components/ConfirmModal.vue";
 
-const patientStore = usePatientStore()
+const patientStore = usePatientStore();
 
-// Estado del modal
-const modalOpen = ref(false)
-const patientToDelete = ref(null)
+// Estado del modal de confirmación
+const modalOpen = ref(false);
+const patientToDelete = ref(null);
+
+// Modal o navegación para crear paciente
+const createPatient = () => {
+  // 👉 Aquí decides: abrir modal, navegar a una ruta, etc.
+  // Ejemplo: router.push({ name: 'patient-create' })
+  console.log("Crear nuevo paciente");
+};
 
 // Abrir modal desde botón eliminar
-const confirmDelete = uuid => {
-  patientToDelete.value = uuid
-  modalOpen.value = true
-}
+const confirmDelete = (uuid) => {
+  patientToDelete.value = uuid;
+  modalOpen.value = true;
+};
 
 // Ejecutar eliminación solo si se confirma
 const handleDelete = () => {
-  if (!patientToDelete.value) return
-  patientStore.deletePatient(patientToDelete.value)
-  patientToDelete.value = null
-}
+  if (!patientToDelete.value) return;
+  patientStore.deletePatient(patientToDelete.value);
+  patientToDelete.value = null;
+};
+
 onMounted(() => {
-  patientStore.fetchPatients()
-})
+  patientStore.fetchPatients();
+});
 </script>
 
 <template>
@@ -31,7 +39,11 @@ onMounted(() => {
     <VCard class="mb-6">
       <VCardTitle class="d-flex align-center justify-space-between">
         <h2>Lista de Pacientes</h2>
-        <!-- aquí iría tu botón para agregar -->
+
+        <!-- 🔹 Botón Crear Paciente -->
+        <RouterLink to="/patients/create">
+          <VBtn color="primary" prepend-icon="bx-plus"> Crear Paciente </VBtn>
+        </RouterLink>
       </VCardTitle>
     </VCard>
 
