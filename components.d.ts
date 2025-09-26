@@ -13,6 +13,7 @@ declare module 'vue' {
     ConfirmModal: typeof import('./resources/js/components/ConfirmModal.vue')['default']
     ErrorHeader: typeof import('./resources/js/components/ErrorHeader.vue')['default']
     MoreBtn: typeof import('./resources/js/@core/components/MoreBtn.vue')['default']
+    NoDataTable: typeof import('./resources/js/components/NoDataTable.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     ThemeSwitcher: typeof import('./resources/js/@core/components/ThemeSwitcher.vue')['default']

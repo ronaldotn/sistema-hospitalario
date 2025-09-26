@@ -87,6 +87,32 @@ export const routes = [
           },
         ],
       },
+       // ✅ Módulo Practitioner con prefijo
+      {
+        path: 'practitioners',
+        children: [
+          {
+            path: 'show',
+            name: 'practitioner-show',
+            component: () => import('@/pages/practitioners/Show.vue'),
+          },
+          {
+            path: 'index',
+            name: 'practitioner-index',
+            component: () => import('@/pages/practitioners/Index.vue'),
+          },
+          {
+            path: 'create',
+            name: 'practitioner-create',
+            component: () => import('@/pages/practitioners/Create.vue'),
+          },
+          {
+            path: 'edit',
+            name: 'practitioner-edit',
+            component: () => import('@/pages/practitioners/Edit.vue'),
+          },
+        ],
+      },
     ],
   },
   {

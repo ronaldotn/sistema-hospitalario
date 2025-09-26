@@ -49,7 +49,34 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
       }"
     />
   </VerticalNavGroup>
-
+  <!-- 👉 Patients -->
+  <VerticalNavGroup
+    :item="{
+      title: 'Doctors',
+      badgeContent: '0',
+      badgeClass: 'bg-error',
+      icon: 'bx-home-smile',
+    }"
+  >
+    <VerticalNavLink
+      :item="{
+        title: 'Show Doctors',
+        to: '/practitioners/index',
+      }"
+    />
+    <VerticalNavLink
+      :item="{
+        title: 'Create Doctor',
+        to: '/practitioners/create',
+      }"
+    />
+    <VerticalNavLink
+      :item="{
+        title: 'Edit Doctor',
+        to: '/practitioners/edit',
+      }"
+    />
+  </VerticalNavGroup>
   <!-- 👉 Apps & Pages -->
   <VerticalNavSectionTitle
     :item="{
