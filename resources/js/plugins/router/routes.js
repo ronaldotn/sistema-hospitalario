@@ -93,22 +93,22 @@ export const routes = [
         children: [
           {
             path: 'show',
-            name: 'practitioner-show',
+            name: 'practitioners-show',
             component: () => import('@/pages/practitioners/Show.vue'),
           },
           {
             path: 'index',
-            name: 'practitioner-index',
+            name: 'practitioners-index',
             component: () => import('@/pages/practitioners/Index.vue'),
           },
           {
             path: 'create',
-            name: 'practitioner-create',
+            name: 'practitioners-create',
             component: () => import('@/pages/practitioners/Create.vue'),
           },
           {
             path: 'edit',
-            name: 'practitioner-edit',
+            name: 'practitioners-edit',
             component: () => import('@/pages/practitioners/Edit.vue'),
           },
         ],

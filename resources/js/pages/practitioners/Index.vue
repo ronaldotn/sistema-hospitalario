@@ -40,8 +40,8 @@ onMounted(() => {
         <h2>Lista de Pacientes</h2>
 
         <!-- 🔹 Botón Crear Paciente -->
-        <RouterLink to="/patients/create">
-          <VBtn color="primary" prepend-icon="bx-plus"> Crear Paciente </VBtn>
+        <RouterLink to="/practitioners/create">
+          <VBtn color="primary" prepend-icon="bx-plus"> Crear Doctores </VBtn>
         </RouterLink>
       </VCardTitle>
     </VCard>
