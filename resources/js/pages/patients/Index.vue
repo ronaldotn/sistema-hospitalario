@@ -2,6 +2,7 @@
 import { ref, onMounted } from "vue";
 import { usePatientStore } from "@/stores/patient";
 import ConfirmModal from "@/components/ConfirmModal.vue";
+import NoDataTable from "@/components/NoDataTable.vue";
 
 const patientStore = usePatientStore();
 
@@ -81,6 +82,13 @@ onMounted(() => {
             </VBtn>
           </td>
         </tr>
+        <NoDataTable
+          :data="patientStore.patients"
+          :cols="7"
+          title="Sin Pacientes"
+          text="No hay pacientes registrados aún"
+          icon="bx-user-x"
+        />
       </tbody>
     </VTable>
 

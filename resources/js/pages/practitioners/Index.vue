@@ -125,7 +125,7 @@ onMounted(() => {
 
         <!-- Mensaje cuando no hay datos -->
         <NoDataTable 
-       
+          :data="filteredPractitioners" 
           :cols="7" 
           title="Sin Practitioners"
           text="No hay practitioners registrados aún" 
