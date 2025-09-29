@@ -3,16 +3,13 @@
 namespace App\Models;
 
 use Carbon\Carbon;
-
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 
 class Patient extends Model
 {
-     /**
-     * Los atributos que se pueden asignar masivamente.
-     *
-     * @var array<int, string>
+    /**
+     * Atributos asignables en masa.
      */
     protected $fillable = [
         'uuid',
@@ -25,21 +22,18 @@ class Patient extends Model
         'contacto',
         'correo',
         'fhir_identifier',
+        'version',
     ];
 
     /**
-     * Los atributos que se deben convertir a tipos nativos.
-     *
-     * @var array
+     * Conversión de campos a tipos nativos.
      */
     protected $casts = [
         'fhir_identifier' => 'array',
     ];
 
     /**
-     * El método "booted" del modelo.
-     *
-     * @return void
+     * Genera automáticamente UUID al crear.
      */
     protected static function booted()
     {
@@ -47,18 +41,55 @@ class Patient extends Model
             $patient->uuid = (string) Str::uuid();
         });
     }
-      // ✅ Accessor para calcular la edad automáticamente
-    public function getEdadAttribute()
+
+    /**
+     * Accessor: calcula edad en años.
+     */
+    public function getEdadAttribute(): ?int
     {
-        if (!$this->fecha_nacimiento) return null;
-        return Carbon::parse($this->fecha_nacimiento)->age;
+        return $this->fecha_nacimiento
+            ? Carbon::parse($this->fecha_nacimiento)->age
+            : null;
     }
-        // ✅ Método para obtener todos los pacientes con edad
-    public static function allWithAge()
+
+    /**
+     * Consulta con filtros, paginación y edad calculada.
+     *
+     * @param  array{identifier?:string,name?:string,_count?:int,_offset?:int} $filters
+     * @return array{items:\Illuminate\Support\Collection,total:int}
+     */
+    public static function searchWithAge(array $filters): array
     {
-        return self::all()->map(function ($p) {
-            $p->edad = $p->edad; // usa el accessor
-            return $p;
-        });
+        $perPage = $filters['_count'] ?? 20;
+        $page    = $filters['_offset'] ?? 0;
+
+        $query = self::query();
+
+        // 🔹 Filtro por documento
+        if (!empty($filters['identifier'])) {
+            $query->where('documento_identidad', $filters['identifier']);
+        }
+
+        // 🔹 Filtro por nombre o apellidos
+        if (!empty($filters['name'])) {
+            $name = $filters['name'];
+            $query->where(function ($q) use ($name) {
+                $q->where('nombre', 'like', "%$name%")
+                    ->orWhere('apellidos', 'like', "%$name%");
+            });
+        }
+
+        $total = $query->count();
+
+        // 🔹 Añade edad a cada registro
+        $items = $query->skip($page)
+            ->take($perPage)
+            ->get()
+            ->map(function ($p) {
+                $p->edad = $p->edad; // usa accessor
+                return $p;
+            });
+
+        return ['items' => $items, 'total' => $total];
     }
 }

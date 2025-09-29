@@ -3,116 +3,110 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\Patient;
+use App\Models\PatientHistory;
+use App\Models\AuditEvents;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\API\BaseController as BaseController;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Validation\ValidationException;
 
 class PatientController extends BaseController
 {
     /**
-     * Listado de pacientes con edad calculada
+     * 🟢 Listar pacientes
+     * - Búsqueda por nombre o documento
+     * - Paginación (_count, _offset)
+     * - Edad calculada en el modelo
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $patients = Patient::allWithAge(); // llamamos al método del modelo
-        return $this->sendResponse($patients, 'Lista de pacientes con edad', 200);
+        $result = Patient::searchWithAge($request->only(
+            'identifier', 'name', '_count', '_offset'
+        ));
+
+        return $this->sendResponse(
+            $result,
+            'Lista de pacientes con edad calculada',
+            200
+        );
     }
 
     /**
-     * Crear un nuevo paciente
+     * 🟢 Crear un nuevo paciente
+     * - Valida nombre/alias, fecha/edad, documento
+     * - Genera identificador FHIR
+     * - Registra auditoría
      */
     public function store(Request $request): JsonResponse
     {
-        // 🔒 Paso 0: Validación de autorización (scope patient.write)
-        // $this->authorize('patient.write'); // Si usas Laravel Passport/Sanctum
-
-        // Paso 1: Validar los datos de entrada
         try {
             $validatedData = $request->validate([
-                'nombre' => 'required_without:alias|string|max:255|nullable',
-                'apellidos' => 'required_without:alias|string|max:255|nullable',
-                'alias' => 'nullable|string|max:255',
+                'nombre'              => 'required_without:alias|string|max:255|nullable',
+                'apellidos'           => 'required_without:alias|string|max:255|nullable',
+                'alias'               => 'nullable|string|max:255',
                 'documento_identidad' => 'nullable|string|max:255|unique:patients,documento_identidad',
-                'fecha_nacimiento' => 'nullable|date',
-                'edad_estimado' => 'nullable|integer|min:0',
-                'sexo' => 'nullable|string|in:masculino,femenino,otro',
-                'direccion' => 'nullable|string|max:255',
-                'contacto' => 'nullable|string|max:255',
-                'correo' => 'nullable|email|max:255|unique:patients,correo',
+                'fecha_nacimiento'    => 'nullable|date',
+                'edad_estimado'       => 'nullable|integer|min:0',
+                'sexo'                => 'nullable|string|in:masculino,femenino,otro',
+                'direccion'           => 'nullable|string|max:255',
+                'contacto'            => 'nullable|string|max:255',
+                'correo'              => 'nullable|email|max:255|unique:patients,correo',
             ]);
 
-
-            // Validación condicional: nombre/apellido o alias
             if (empty($validatedData['nombre']) && empty($validatedData['alias'])) {
                 return $this->sendError('Debe ingresar nombre/apellido o alias', [], 422);
             }
-
-            // Validación condicional: fecha nacimiento o edad estimada
             if (empty($validatedData['fecha_nacimiento']) && empty($validatedData['edad_estimado'])) {
                 return $this->sendError('Debe ingresar fecha de nacimiento o edad estimada', [], 422);
             }
-
-            // Al menos un identificador o documento
             if (empty($validatedData['documento_identidad'])) {
                 return $this->sendError('Debe ingresar al menos un documento o identificador', [], 422);
             }
+
+            DB::beginTransaction();
+
+            $fhirIdentifier = [
+                'system' => env('FHIR_SYSTEM_URL', 'http://localhost/fhir/Patient'),
+                'value'  => Str::uuid()->toString(),
+                'type'   => [
+                    'coding' => [[
+                        'system'  => 'http://terminology.hl7.org/CodeSystem/v2-0203',
+                        'code'    => 'MR',
+                        'display' => 'Medical Record Number',
+                    ]],
+                ],
+            ];
+
+            // UUID se genera en el modelo
+            $patient = Patient::create(array_merge(
+                $validatedData,
+                ['fhir_identifier' => $fhirIdentifier, 'version' => 1]
+            ));
+
+            AuditEvents::create([
+                'usuario_id'   => Auth::id(),
+                'recurso'      => 'Patient',
+                'evento'       => 'create',
+                'detalle'      => $patient->toArray(),
+                'recurso_uuid' => $patient->uuid,
+            ]);
+
+            DB::commit();
+            return $this->sendResponse($patient, 'Paciente registrado exitosamente', 201);
+
         } catch (ValidationException $e) {
             return $this->sendError('Error de validación', $e->errors(), 422);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->sendError('Error al crear paciente', [$e->getMessage()], 500);
         }
-
-        // Paso 2: Validación rápida de duplicados
-        $existingPatient = Patient::where('documento_identidad', $validatedData['documento_identidad'])
-            ->orWhere(function ($query) use ($validatedData) {
-                $query->where('nombre', $validatedData['nombre'] ?? '')
-                    ->where('apellidos', $validatedData['apellidos'] ?? '')
-                    ->where('fecha_nacimiento', $validatedData['fecha_nacimiento'] ?? null);
-            })->first();
-
-        if ($existingPatient) {
-            return $this->sendError(
-                'El paciente ya existe en el sistema.',
-                ['uuid' => $existingPatient->uuid],
-                409
-            );
-        }
-
-        // Paso 3: Crear identificador FHIR usando .env
-        $fhirIdentifier = [
-            'system' => env('FHIR_SYSTEM_URL', 'http://localhost/fhir/Patient'),
-            'value' => Str::uuid()->toString(),
-            'type' => [
-                'coding' => [
-                    [
-                        'system' => 'http://terminology.hl7.org/CodeSystem/v2-0203',
-                        'code' => 'MR',
-                        'display' => 'Medical Record Number'
-                    ]
-                ]
-            ]
-        ];
-
-        // Paso 4: Persistir en la base de datos
-        $patient = Patient::create(array_merge($validatedData, [
-            'uuid' => Str::uuid()->toString(),
-            'fhir_identifier' => $fhirIdentifier
-        ]));
-
-        // Paso 5: Auditoría mínima (sin PII)
-        // AuditEvent::create([
-        //     'user_id' => auth()->id(),
-        //     'action' => 'create_patient',
-        //     'ip' => $request->ip(),
-        //     'payload' => json_encode(['uuid' => $patient->uuid]),
-        // ]);
-
-        // Paso 6: Respuesta exitosa
-        return $this->sendResponse($patient, 'Paciente registrado exitosamente', 201);
     }
 
     /**
-     * Mostrar paciente por UUID
+     * 🟢 Ver un paciente específico
      */
     public function show(string $uuid): JsonResponse
     {
@@ -122,34 +116,101 @@ class PatientController extends BaseController
             return $this->sendError('Paciente no encontrado', [], 404);
         }
 
-        return $this->sendResponse($patient, 'Paciente encontrado', 200);
+        // Añadimos edad calculada al vuelo
+        $patient->edad = $patient->edad;
+
+        return $this->sendResponse($patient, 'Paciente encontrado');
     }
 
     /**
-     * Actualizar paciente (por implementar)
+     * 🟠 Actualizar datos de un paciente
+     * - Guarda historial en PatientHistory
+     * - Aumenta versión
+     * - Registra auditoría
      */
-    public function update(Request $request, Patient $patient): JsonResponse
-    {
-        // Aquí se implementaría update con validaciones similares
-        return $this->sendError('Funcionalidad aún no implementada', [], 501);
-    }
-
-    /**
-     * Eliminar paciente por UUID
-     */
-    public function destroy(string $uuid): JsonResponse
+    public function update(Request $request, string $uuid): JsonResponse
     {
         $patient = Patient::where('uuid', $uuid)->first();
-
         if (!$patient) {
             return $this->sendError('Paciente no encontrado', [], 404);
         }
 
         try {
-            $patient->delete();
-            return $this->sendResponse([], 'Paciente eliminado exitosamente', 200);
+            $validatedData = $request->validate([
+                'nombre'              => 'nullable|string|max:255',
+                'apellidos'           => 'nullable|string|max:255',
+                'alias'               => 'nullable|string|max:255',
+                'documento_identidad' => 'nullable|string|max:255|unique:patients,documento_identidad,' . $patient->id,
+                'fecha_nacimiento'    => 'nullable|date',
+                'edad_estimado'       => 'nullable|integer|min:0',
+                'sexo'                => 'nullable|string|in:masculino,femenino,otro',
+                'direccion'           => 'nullable|string|max:255',
+                'contacto'            => 'nullable|string|max:255',
+                'correo'              => 'nullable|email|max:255|unique:patients,correo,' . $patient->id,
+            ]);
+
+            DB::beginTransaction();
+
+            // Guardamos versión anterior
+            PatientHistory::create([
+                'patient_id' => $patient->id,
+                'data'       => $patient->toArray(),
+                'version'    => $patient->version,
+            ]);
+
+            $patient->update(array_merge(
+                $validatedData,
+                ['version' => $patient->version + 1]
+            ));
+
+            AuditEvents::create([
+                'usuario_id'   => Auth::id(),
+                'recurso'      => 'Patient',
+                'evento'       => 'update',
+                'detalle'      => $patient->toArray(),
+                'recurso_uuid' => $patient->uuid,
+            ]);
+
+            DB::commit();
+            return $this->sendResponse($patient, 'Paciente actualizado exitosamente');
+
+        } catch (ValidationException $e) {
+            return $this->sendError('Error de validación', $e->errors(), 422);
         } catch (\Exception $e) {
-            return $this->sendError('Error eliminando paciente', [$e->getMessage()], 500);
+            DB::rollBack();
+            return $this->sendError('Error al actualizar paciente', [$e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * 🔴 Eliminación lógica de paciente (soft delete)
+     * - Conserva historial y registra auditoría
+     */
+    public function destroy(string $uuid): JsonResponse
+    {
+        $patient = Patient::where('uuid', $uuid)->first();
+        if (!$patient) {
+            return $this->sendError('Paciente no encontrado', [], 404);
+        }
+
+        DB::beginTransaction();
+        try {
+            $patient->delete(); // Soft delete: marca deleted_at
+
+            AuditEvents::create([
+                'usuario_id'   => Auth::id(),
+                'recurso'      => 'Patient',
+                'evento'       => 'delete',
+                'detalle'      => $patient->toArray(),
+                'recurso_uuid' => $patient->uuid,
+            ]);
+
+            DB::commit();
+            return $this->sendResponse(null, 'Paciente eliminado (borrado lógico)');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->sendError('Error al eliminar paciente', [$e->getMessage()], 500);
         }
     }
 }

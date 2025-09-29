@@ -1,98 +1,112 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { usePatientStore } from "@/stores/patient";
-import ConfirmModal from "@/components/ConfirmModal.vue";
-import NoDataTable from "@/components/NoDataTable.vue";
+import { FlexibleTable, ConfirmModal } from "@/components";
 
 const patientStore = usePatientStore();
 
-// Estado del modal de confirmación
+// Modal y paciente a eliminar
 const modalOpen = ref(false);
 const patientToDelete = ref(null);
 
-// Modal o navegación para crear paciente
-const createPatient = () => {
-  // 👉 Aquí decides: abrir modal, navegar a una ruta, etc.
-  // Ejemplo: router.push({ name: 'patient-create' })
-  console.log("Crear nuevo paciente");
-};
-
-// Abrir modal desde botón eliminar
+// 🔹 Confirmar eliminación
 const confirmDelete = (uuid) => {
   patientToDelete.value = uuid;
   modalOpen.value = true;
 };
 
-// Ejecutar eliminación solo si se confirma
-const handleDelete = () => {
+const handleDelete = async () => {
   if (!patientToDelete.value) return;
-  patientStore.deletePatient(patientToDelete.value);
+  await patientStore.deletePatient(patientToDelete.value);
   patientToDelete.value = null;
+  modalOpen.value = false;
 };
 
-onMounted(() => {
-  patientStore.fetchPatients();
+// 🔹 Filtros
+const filters = ref({
+  identifier: "",
+  name: "",
+  _count: 10,
+  _offset: 0
 });
+
+const applyFilters = () => {
+  filters.value._offset = 0;
+  patientStore.fetchPatients(filters.value);
+};
+
+// 🔹 Cambio de página
+const changePage = (page) => {
+  filters.value._offset = (page - 1) * filters.value._count;
+  patientStore.fetchPatients(filters.value);
+};
+
+// 🔹 Primera carga
+onMounted(() => patientStore.fetchPatients(filters.value));
 </script>
 
 <template>
-  <div class="pa-6">
+  <div class="p-6">
     <VCard class="mb-6">
       <VCardTitle class="d-flex align-center justify-space-between">
         <h2>Lista de Pacientes</h2>
-
-        <!-- 🔹 Botón Crear Paciente -->
         <RouterLink to="/patients/create">
-          <VBtn color="primary" prepend-icon="bx-plus"> Crear Paciente </VBtn>
+          <VBtn color="primary" prepend-icon="bx-plus">Crear Paciente</VBtn>
         </RouterLink>
       </VCardTitle>
+
+      <!-- 🔹 Filtros -->
+      <VCardText class="d-flex gap-4 align-center">
+        <VTextField
+          v-model="filters.identifier"
+          label="Documento"
+          outlined
+          dense
+          clearable
+          clear-icon="mdi-close-circle"
+          @click:clear="applyFilters"
+          class="w-40"
+        />
+        <VTextField
+          v-model="filters.name"
+          label="Nombre/Apellido"
+          outlined
+          dense
+          clearable
+          clear-icon="mdi-close-circle"
+          @keyup.enter="applyFilters"
+          @click:clear="applyFilters"
+          class="w-48"
+        />
+        <VBtn color="primary" @click="applyFilters">Buscar</VBtn>
+      </VCardText>
     </VCard>
 
-    <VTable>
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Dni</th>
-          <th>Edad</th>
-          <th>Sexo</th>
-          <th>Dirección</th>
-          <th>Contacto</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="p in patientStore.patients" :key="p.uuid">
-          <td>{{ p.nombre }} {{ p.apellidos }}</td>
-          <td>{{ p.documento_identidad }}</td>
-          <td>{{ p.edad }}</td>
-          <td>{{ p.sexo }}</td>
-          <td>{{ p.direccion }}</td>
-          <td>{{ p.contacto }}</td>
-          <td>
-            <VBtn icon size="small" color="info" class="me-2">
-              <VIcon icon="bx-edit" />
-            </VBtn>
-            <VBtn
-              icon
-              size="small"
-              color="error"
-              @click="confirmDelete(p.uuid)"
-            >
-              <VIcon icon="bx-trash" />
-            </VBtn>
-          </td>
-        </tr>
-        <NoDataTable
-          :data="patientStore.patients"
-          :cols="7"
-          title="Sin Pacientes"
-          text="No hay pacientes registrados aún"
-          icon="bx-user-x"
-        />
-      </tbody>
-    </VTable>
+    <!-- 🔹 Tabla de pacientes -->
+    <FlexibleTable
+      :data="patientStore"
+      value="patients"
+      :columns="['Nombre','DNI','Edad','Sexo','Dirección','Contacto','Acciones']"
+      title="Sin pacientes"
+      text="No hay pacientes registrados"
+      icon="bx-user-x"
+    >
+      <tr v-for="p in patientStore.patients" :key="p.uuid">
+        <td>{{ p.nombre }} {{ p.apellidos }}</td>
+        <td>{{ p.documento_identidad }}</td>
+        <td>{{ p.edad ?? '-' }}</td>
+        <td>{{ p.sexo ?? '-' }}</td>
+        <td>{{ p.direccion ?? '-' }}</td>
+        <td>{{ p.contacto ?? '-' }}</td>
+        <td>
+          <VBtn icon size="small" color="error" @click="confirmDelete(p.uuid)">
+            <VIcon icon="bx-trash" />
+          </VBtn>
+        </td>
+      </tr>
+    </FlexibleTable>
 
-    <!-- Modal reutilizable -->
+    <!-- 🔹 Modal de confirmación -->
     <ConfirmModal
       v-model="modalOpen"
       type="eliminar"
@@ -100,5 +114,21 @@ onMounted(() => {
       message="¿Seguro que deseas eliminar este paciente?"
       @confirmed="handleDelete"
     />
+
+    <!-- 🔹 Paginación simple -->
+    <div
+      v-if="patientStore.total > filters._count"
+      class="mt-4 d-flex justify-center gap-2"
+    >
+      <VBtn
+        v-for="page in Math.ceil(patientStore.total / filters._count)"
+        :key="page"
+        small
+        outlined
+        @click="changePage(page)"
+      >
+        {{ page }}
+      </VBtn>
+    </div>
   </div>
 </template>

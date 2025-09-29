@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('audit_events', function (Blueprint $table) {
             $table->id();
-            $table->uuid('uuid')->unique();       // UUID público
-            $table->string('evento');             // Ej.: "Creación Practitioner"
-            $table->string('recurso');            // Ej.: "Practitioner"
-            $table->uuid('recurso_uuid');         // UUID del recurso afectado
-            $table->json('detalle')->nullable();  // Detalle de cambios (campo, valor antes/después)
-            $table->unsignedBigInteger('usuario_id')->nullable(); // ID del usuario que hizo el cambio
+            $table->uuid('uuid')->unique()->comment('Identificador único del evento');
+            $table->string('evento')->comment('Tipo de acción: create, update, delete');
+            $table->string('recurso')->comment('Tabla o entidad afectada');
+            $table->uuid('recurso_uuid')->nullable()->comment('UUID del recurso afectado');
+            $table->json('detalle')->nullable()->comment('Detalles de la acción en JSON');
+            $table->foreignId('usuario_id')->nullable()->constrained('users')->nullOnDelete()->comment('Usuario que realizó la acción');
             $table->timestamps();
         });
     }
