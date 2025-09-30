@@ -61,12 +61,12 @@ export const routes = [
         component: () => import('@/pages/form-layouts.vue'),
         beforeEnter: routeAuthGuard,
       },
-       // ✅ Módulo Patients con prefijo
+      // ✅ Módulo Patients con prefijo
       {
         path: 'patients',
         children: [
           {
-            path: 'show',
+            path: 'show/:uuid',  // <-- agregamos el parámetro dinámico
             name: 'patients-show',
             component: () => import('@/pages/patients/Show.vue'),
           },
@@ -81,13 +81,14 @@ export const routes = [
             component: () => import('@/pages/patients/Create.vue'),
           },
           {
-            path: 'edit',
+            path: 'edit/:uuid',  // <-- agregamos el parámetro dinámico
             name: 'patients-edit',
             component: () => import('@/pages/patients/Edit.vue'),
           },
         ],
       },
-       // ✅ Módulo Practitioner con prefijo
+
+      // ✅ Módulo Practitioner con prefijo
       {
         path: 'practitioners',
         children: [
