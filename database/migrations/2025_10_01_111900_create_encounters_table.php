@@ -22,12 +22,12 @@ return new class extends Migration
             $table->string('status', 20)->default('in-progress');
 
             $table->foreign('patient_id')
-                  ->references('patient_id')
+                  ->references('id')
                   ->on('patients')
                   ->onDelete('cascade');
 
             $table->foreign('practitioner_id')
-                  ->references('practitioner_id')
+                  ->references('id')
                   ->on('practitioners')
                   ->onDelete('set null');
 

@@ -24,7 +24,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('organization_id')
-                  ->references('organization_id')
+                  ->references('id')
                   ->on('organizations')
                   ->onDelete('set null');
         });

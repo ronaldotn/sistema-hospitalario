@@ -11,13 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('conditions', function (Blueprint $table) {
+        Schema::create('observations', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('encounter_id')->nullable();
             $table->unsignedBigInteger('patient_id')->nullable();
-            $table->string('code', 50)->nullable()->comment('ICD-10 o SNOMED');
-            $table->text('description')->nullable();
-            $table->timestamp('recorded_date')->useCurrent();
+            $table->string('code', 50)->nullable()->comment('LOINC');
+            $table->text('value')->nullable();
+            $table->string('unit', 20)->nullable();
+            $table->timestamp('observed_at')->useCurrent();
 
             $table->foreign('encounter_id')
                   ->references('id')
@@ -36,6 +37,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('conditions');
+        Schema::dropIfExists('observations');
     }
 };
