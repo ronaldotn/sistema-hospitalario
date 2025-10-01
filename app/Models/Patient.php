@@ -13,36 +13,67 @@ class Patient extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'uuid',
-        'nombre',
-        'apellidos',
-        'documento_identidad',
-        'fecha_nacimiento',
-        'sexo',
-        'direccion',
-        'contacto',
-        'correo',
-        'fhir_identifier',
+        'identifier',
+        'first_name',
+        'last_name',
+        'date_of_birth',
+        'gender',
+        'phone',
+        'email',
+        'address',
     ];
 
-    /**
-     * Los atributos que se deben convertir a tipos nativos.
-     *
-     * @var array
-     */
     protected $casts = [
-        'fhir_identifier' => 'array',
+        'date_of_birth' => 'date',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
-    /**
-     * El método "booted" del modelo.
-     *
-     * @return void
-     */
-    protected static function booted()
+    // Relaciones
+    public function encounters()
     {
-        static::creating(function ($patient) {
-            $patient->uuid = (string) Str::uuid();
-        });
+        return $this->hasMany(Encounter::class, 'patient_id', 'patient_id');
+    }
+
+    public function conditions()
+    {
+        return $this->hasMany(Condition::class, 'patient_id', 'patient_id');
+    }
+
+    public function observations()
+    {
+        return $this->hasMany(Observation::class, 'patient_id', 'patient_id');
+    }
+
+    public function diagnosticReports()
+    {
+        return $this->hasMany(DiagnosticReport::class, 'patient_id', 'patient_id');
+    }
+
+    public function consents()
+    {
+        return $this->hasMany(Consent::class, 'patient_id', 'patient_id');
+    }
+
+    // Accessors
+    public function getFullNameAttribute()
+    {
+        return "{$this->first_name} {$this->last_name}";
+    }
+
+    public function getAgeAttribute()
+    {
+        return $this->date_of_birth ? $this->date_of_birth->age : null;
+    }
+
+    // Scopes
+    public function scopeActive($query)
+    {
+        return $query->whereNotNull('email');
+    }
+
+    public function scopeByGender($query, $gender)
+    {
+        return $query->where('gender', $gender);
     }
 }
