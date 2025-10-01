@@ -4,10 +4,12 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\DB;
 use App\Models\{
     Patient, Organization, Practitioner, User, 
     Encounter, Condition, Observation, 
-    DiagnosticReport, Consent, AuditEvent, Role
+    DiagnosticReport, Consent, AuditEvents
 };
 
 class DatabaseSeeder extends Seeder
@@ -56,7 +58,7 @@ class DatabaseSeeder extends Seeder
         Consent::factory()->active()->count(10)->create();
         
         // 12. Crear Eventos de Auditoría (200)
-        AuditEvent::factory()->count(200)->create();
+        AuditEvents::factory()->count(200)->create();
         
         $this->command->info('✅ Base de datos poblada exitosamente!');
         $this->command->info('📊 Resumen:');
@@ -73,7 +75,7 @@ class DatabaseSeeder extends Seeder
                 ['Observaciones', Observation::count()],
                 ['Reportes', DiagnosticReport::count()],
                 ['Consentimientos', Consent::count()],
-                ['Auditorías', AuditEvent::count()],
+                ['Auditorías', AuditEvents::count()],
             ]
         );
     }
@@ -81,14 +83,15 @@ class DatabaseSeeder extends Seeder
     private function createRoles(): void
     {
         $roles = [
-            ['name' => 'admin', 'description' => 'Administrador del sistema'],
-            ['name' => 'doctor', 'description' => 'Médico con acceso completo'],
-            ['name' => 'nurse', 'description' => 'Enfermero con acceso limitado'],
-            ['name' => 'receptionist', 'description' => 'Recepcionista'],
-            ['name' => 'lab_technician', 'description' => 'Técnico de laboratorio'],
+            ['name' => 'admin'], //'description' => 'Administrador del sistema'
+            ['name' => 'doctor'], //'description' => 'Médico con acceso completo'
+            ['name' => 'nurse'], //'description' => 'Enfermero con acceso limitado'
+            ['name' => 'receptionist'], //'description' => 'Recepcionista',
+            ['name' => 'lab_technician'], //'description' => 'Técnico de laboratorio'
         ];
 
         foreach ($roles as $role) {
+            // dd($role);
             Role::create($role);
         }
     }
@@ -101,19 +104,20 @@ class DatabaseSeeder extends Seeder
         foreach ($users as $user) {
             // Admin siempre tiene rol admin
             if ($user->username === 'admin') {
-                DB::table('user_roles')->insert([
-                    'user_id' => $user->user_id,
-                    'role_id' => 1, // admin role
-                ]);
+                $user->assignRole('admin');
                 continue;
             }
 
             // Otros usuarios obtienen roles aleatorios
-            $roleId = $roles->random()->role_id;
-            DB::table('user_roles')->insert([
-                'user_id' => $user->user_id,
-                'role_id' => $roleId,
-            ]);
+            // $roleId = $roles->random()->role_id;
+            // DB::table('user_roles')->insert([
+            //     'user_id' => $user->user_id,
+            //     'role_id' => $roleId,
+            // ]);
+
+            $roleName = $roles->random()->name;
+            $user->assignRole($roleName);
+
         }
     }
 }

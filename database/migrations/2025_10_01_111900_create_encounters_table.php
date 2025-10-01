@@ -32,7 +32,7 @@ return new class extends Migration
                   ->onDelete('set null');
 
             $table->foreign('organization_id')
-                  ->references('organization_id')
+                  ->references('id')
                   ->on('organizations')
                   ->onDelete('set null');
         });

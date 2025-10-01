@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Patient extends Model
 {
+    /** @use HasFactory<\Database\Factories\PractitionerFactory> */
+    use HasFactory;
+    
      /**
      * Los atributos que se pueden asignar masivamente.
      *
