@@ -9,6 +9,16 @@ import UserProfile from '@/layouts/components/UserProfile.vue'
 
 <template>
   <VerticalNavLayout>
+      <!-- Loader global -->
+    <!-- <v-progress-linear
+      v-if="loader.loading"
+      indeterminate
+      color="primary"
+      absolute
+      top
+      height="3"
+      class="z-50"
+    /> -->
     <!-- 👉 navbar -->
     <template #navbar="{ toggleVerticalOverlayNavActive }">
       <div class="d-flex h-100 align-center">

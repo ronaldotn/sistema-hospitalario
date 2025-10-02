@@ -1,6 +1,6 @@
 // src/components/index.js
 export { default as ConfirmModal } from './ConfirmModal.vue'
-export { default as NoDataTable } from './NoDataTable.vue'
+export { default as StatusMessage } from './StatusMessage.vue'
 export { default as StatusBadge } from './StatusBadge.vue'
 export { default as FlexibleTable } from './FlexibleTable.vue'
 /**

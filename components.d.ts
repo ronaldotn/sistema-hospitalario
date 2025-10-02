@@ -18,6 +18,7 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     StatusBadge: typeof import('./resources/js/components/StatusBadge.vue')['default']
+    StatusMessage: typeof import('./resources/js/components/StatusMessage.vue')['default']
     ThemeSwitcher: typeof import('./resources/js/@core/components/ThemeSwitcher.vue')['default']
     UpgradeToPro: typeof import('./resources/js/components/UpgradeToPro.vue')['default']
     VueApexCharts: typeof import('vue3-apexcharts')['default']

@@ -1,36 +1,27 @@
-// stores/patient.js
 import { ref } from "vue";
 import { defineStore } from "pinia";
 import Axios from "@/composables/Axios";
 import { WarningToast, SuccessToast } from "@/composables/Toast";
 
 export const usePatientStore = defineStore("patient", () => {
-  // 🔹 Estado principal
-  const patients = ref([]);  // lista de pacientes
-  const total = ref(0);      // total de registros
-  const loading = ref(false); // indicador general de carga
+  // 🔹 Estado global del store
+  const patients = ref([]);      // Lista completa de pacientes (index.vue)
+  const current = ref(null);     // Paciente seleccionado (show/update)
+  const total = ref(0);          // Total de registros para paginación
+  const loading = ref(false);    // Indicador de carga general
 
-  // 🔹 Filtros y paginación
-  const filters = ref({
-    identifier: "",
-    name: "",
-    _count: 10,
-    _offset: 0
-  });
+  // 🔹 Filtros para la lista de pacientes
+  const filters = ref({ identifier: "", name: "", _count: 10, _offset: 0 });
 
-  /**
-   * 🔹 fetchPatients
-   * Obtiene la lista de pacientes con filtros
-   */
+  // 🔹 Obtener lista de pacientes con filtros y paginación
   const fetchPatients = async (extra = {}) => {
     loading.value = true;
-
     filters.value = { ...filters.value, ...extra };
 
     try {
       const { data } = await Axios.get("patients", { params: filters.value });
-      patients.value = data.result.items || [];
-      total.value = data.result.total || 0;
+      patients.value = data.result.items || [];  // Guardar lista
+      total.value = data.result.total || 0;      // Guardar total de registros
     } catch (err) {
       WarningToast(err.response?.data?.message || err.message);
     } finally {
@@ -38,17 +29,14 @@ export const usePatientStore = defineStore("patient", () => {
     }
   };
 
-  /**
-   * 🔹 showPatient
-   * Obtiene un paciente específico por uuid
-   */
+  // 🔹 Obtener un paciente específico para show/update
   const showPatient = async (uuid) => {
     if (!uuid) return null;
     loading.value = true;
-
     try {
       const { data } = await Axios.get(`patients/${uuid}`);
-      return data.result || null;
+      current.value = data.result || null;      // Guardar paciente actual
+      return current.value;
     } catch (err) {
       WarningToast(err.response?.data?.message || err.message);
       return null;
@@ -57,17 +45,13 @@ export const usePatientStore = defineStore("patient", () => {
     }
   };
 
-  /**
-   * 🔹 createPatient
-   * Crea un nuevo paciente
-   */
+  // 🔹 Crear un nuevo paciente
   const createPatient = async (payload) => {
     loading.value = true;
-
     try {
       const { data } = await Axios.post("patients", payload);
       SuccessToast(data.message || "Paciente creado correctamente");
-      await fetchPatients(); // refresca la lista automáticamente
+      await fetchPatients(); // Refresca lista automáticamente
       return data;
     } catch (err) {
       WarningToast(err.response?.data?.message || err.message);
@@ -77,18 +61,13 @@ export const usePatientStore = defineStore("patient", () => {
     }
   };
 
-  /**
-   * 🔹 updatePatient
-   * Actualiza un paciente existente por uuid
-   */
+  // 🔹 Actualizar un paciente existente
   const updatePatient = async (uuid, payload) => {
     if (!uuid) return;
     loading.value = true;
-
     try {
       const { data } = await Axios.put(`patients/${uuid}`, payload);
       SuccessToast(data.message || "Paciente actualizado correctamente");
-      await fetchPatients(); // refresca la lista para reflejar cambios
       return data;
     } catch (err) {
       WarningToast(err.response?.data?.message || err.message);
@@ -98,18 +77,14 @@ export const usePatientStore = defineStore("patient", () => {
     }
   };
 
-  /**
-   * 🔹 deletePatient
-   * Elimina un paciente y refresca la lista automáticamente
-   */
+  // 🔹 Eliminar un paciente
   const deletePatient = async (uuid) => {
     if (!uuid) return;
     loading.value = true;
-
     try {
       await Axios.delete(`patients/${uuid}`);
       SuccessToast("Paciente eliminado");
-      await fetchPatients(); // refresca lista con filtros actuales
+      await fetchPatients(); // Refresca lista después de eliminar
     } catch (err) {
       WarningToast(err.response?.data?.message || err.message);
     } finally {
@@ -117,16 +92,17 @@ export const usePatientStore = defineStore("patient", () => {
     }
   };
 
-  // 🔹 Retorno de estado y métodos
+  // 🔹 Retorno de estado y métodos para usar en componentes
   return {
-    patients,       // lista de pacientes
-    total,          // total de registros
-    loading,        // indicador de carga
-    filters,        // filtros para fetch
-    fetchPatients,  // método para obtener lista
-    showPatient,    // método para obtener paciente específico
-    createPatient,  // método para crear paciente
-    updatePatient,  // método para actualizar paciente
-    deletePatient   // método para eliminar paciente
+    patients,       // Lista de pacientes (index)
+    current,        // Paciente actual (show/update)
+    total,          // Total de registros
+    loading,        // Indicador de carga
+    filters,        // Filtros de búsqueda y paginación
+    fetchPatients,  // Obtener lista
+    showPatient,    // Obtener paciente individual
+    createPatient,  // Crear paciente
+    updatePatient,  // Actualizar paciente
+    deletePatient   // Eliminar paciente
   };
 });
