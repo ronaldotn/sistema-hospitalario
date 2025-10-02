@@ -26,12 +26,12 @@ class Condition extends Model
     // Relaciones
     public function encounter()
     {
-        return $this->belongsTo(Encounter::class, 'encounter_id', 'encounter_id');
+        return $this->belongsTo(Encounter::class);
     }
 
     public function patient()
     {
-        return $this->belongsTo(Patient::class, 'patient_id', 'patient_id');
+        return $this->belongsTo(Patient::class);
     }
 
     // Scopes

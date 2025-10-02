@@ -31,12 +31,12 @@ class Consent extends Model
     // Relaciones
     public function patient()
     {
-        return $this->belongsTo(Patient::class, 'patient_id', 'patient_id');
+        return $this->belongsTo(Patient::class);
     }
 
     public function organization()
     {
-        return $this->belongsTo(Organization::class, 'granted_to', 'organization_id');
+        return $this->belongsTo(Organization::class);
     }
 
     // Scopes

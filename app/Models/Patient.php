@@ -35,27 +35,27 @@ class Patient extends Model
     // Relaciones
     public function encounters()
     {
-        return $this->hasMany(Encounter::class, 'patient_id', 'patient_id');
+        return $this->hasMany(Encounter::class);
     }
 
     public function conditions()
     {
-        return $this->hasMany(Condition::class, 'patient_id', 'patient_id');
+        return $this->hasMany(Condition::class);
     }
 
     public function observations()
     {
-        return $this->hasMany(Observation::class, 'patient_id', 'patient_id');
+        return $this->hasMany(Observation::class);
     }
 
     public function diagnosticReports()
     {
-        return $this->hasMany(DiagnosticReport::class, 'patient_id', 'patient_id');
+        return $this->hasMany(DiagnosticReport::class);
     }
 
     public function consents()
     {
-        return $this->hasMany(Consent::class, 'patient_id', 'patient_id');
+        return $this->hasMany(Consent::class);
     }
 
     // Accessors

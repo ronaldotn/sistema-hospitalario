@@ -27,16 +27,16 @@ class Organization extends Model
     // Relaciones
     public function practitioners()
     {
-        return $this->hasMany(Practitioner::class, 'organization_id', 'organization_id');
+        return $this->hasMany(Practitioner::class);
     }
 
     public function encounters()
     {
-        return $this->hasMany(Encounter::class, 'organization_id', 'organization_id');
+        return $this->hasMany(Encounter::class);
     }
 
     public function consents()
     {
-        return $this->hasMany(Consent::class, 'granted_to', 'organization_id');
+        return $this->hasMany(Consent::class);
     }
 }

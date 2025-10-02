@@ -29,32 +29,32 @@ class Encounter extends Model
     // Relaciones
     public function patient()
     {
-        return $this->belongsTo(Patient::class, 'patient_id', 'patient_id');
+        return $this->belongsTo(Patient::class);
     }
 
     public function practitioner()
     {
-        return $this->belongsTo(Practitioner::class, 'practitioner_id', 'practitioner_id');
+        return $this->belongsTo(Practitioner::class);
     }
 
     public function organization()
     {
-        return $this->belongsTo(Organization::class, 'organization_id', 'organization_id');
+        return $this->belongsTo(Organization::class);
     }
 
     public function conditions()
     {
-        return $this->hasMany(Condition::class, 'encounter_id', 'encounter_id');
+        return $this->hasMany(Condition::class);
     }
 
     public function observations()
     {
-        return $this->hasMany(Observation::class, 'encounter_id', 'encounter_id');
+        return $this->hasMany(Observation::class);
     }
 
     public function diagnosticReports()
     {
-        return $this->hasMany(DiagnosticReport::class, 'encounter_id', 'encounter_id');
+        return $this->hasMany(DiagnosticReport::class);
     }
 
     // Scopes

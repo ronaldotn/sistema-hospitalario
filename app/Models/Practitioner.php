@@ -30,17 +30,17 @@ class Practitioner extends Model
     // Relaciones
     public function organization()
     {
-        return $this->belongsTo(Organization::class, 'organization_id', 'organization_id');
+        return $this->belongsTo(Organization::class);
     }
 
     public function user()
     {
-        return $this->hasOne(User::class, 'practitioner_id', 'practitioner_id');
+        return $this->hasOne(User::class);
     }
 
     public function encounters()
     {
-        return $this->hasMany(Encounter::class, 'practitioner_id', 'practitioner_id');
+        return $this->hasMany(Encounter::class);
     }
 
     // Accessors
