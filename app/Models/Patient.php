@@ -2,47 +2,81 @@
 
 namespace App\Models;
 
-use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Patient extends Model
 {
+    /** @use HasFactory<\Database\Factories\PractitionerFactory> */
+    use HasFactory;
+    
      /**
      * Los atributos que se pueden asignar masivamente.
      *
      * @var array<int, string>
      */
     protected $fillable = [
-        'uuid',
-        'nombre',
-        'apellidos',
-        'documento_identidad',
-        'fecha_nacimiento',
-        'sexo',
-        'direccion',
-        'contacto',
-        'correo',
-        'fhir_identifier',
+        'identifier',
+        'first_name',
+        'last_name',
+        'date_of_birth',
+        'gender',
+        'phone',
+        'email',
+        'address',
     ];
 
-    /**
-     * Los atributos que se deben convertir a tipos nativos.
-     *
-     * @var array
-     */
     protected $casts = [
-        'fhir_identifier' => 'array',
+        'date_of_birth' => 'date',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
-    /**
-     * El método "booted" del modelo.
-     *
-     * @return void
-     */
-    protected static function booted()
+    // Relaciones
+    public function encounters()
     {
-        static::creating(function ($patient) {
-            $patient->uuid = (string) Str::uuid();
-        });
+        return $this->hasMany(Encounter::class);
+    }
+
+    public function conditions()
+    {
+        return $this->hasMany(Condition::class);
+    }
+
+    public function observations()
+    {
+        return $this->hasMany(Observation::class);
+    }
+
+    public function diagnosticReports()
+    {
+        return $this->hasMany(DiagnosticReport::class);
+    }
+
+    public function consents()
+    {
+        return $this->hasMany(Consent::class);
+    }
+
+    // Accessors
+    public function getFullNameAttribute()
+    {
+        return "{$this->first_name} {$this->last_name}";
+    }
+
+    public function getAgeAttribute()
+    {
+        return $this->date_of_birth ? $this->date_of_birth->age : null;
+    }
+
+    // Scopes
+    public function scopeActive($query)
+    {
+        return $query->whereNotNull('email');
+    }
+
+    public function scopeByGender($query, $gender)
+    {
+        return $query->where('gender', $gender);
     }
 }

@@ -29,6 +29,10 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'status' => $this->faker->randomElement(['active', 'inactive']),
+            'practitioner_id' => $this->faker->boolean(70) ? $this->faker->numberBetween(1, 20) : null,
+            'created_at' => now(),
+            'updated_at' => now(),
         ];
     }
 
@@ -39,6 +43,23 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'name' => 'admin',
+            'email' => 'admin@sistema.bo',
+            'status' => 'active',
+            'practitioner_id' => null,
+        ]);
+    }
+
+    public function active(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'active',
         ]);
     }
 }
