@@ -35,7 +35,9 @@
       ],
       "@styles/*": [
         "./resources/css/*"
-      ]
+      ],
+            // 🔹 Nuevos alias semánticos
+      "@pages": ["./resources/js/views/pages"],
     },
     "types": [
       "vite/client"

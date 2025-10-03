@@ -12,5 +12,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     //ralimit, franz
 });
+Route::get('/patients', [PatientController::class, 'index']);
 Route::post('/patients', [PatientController::class, 'store']);
 Route::get('/patients/{uuid}', [PatientController::class, 'show']);

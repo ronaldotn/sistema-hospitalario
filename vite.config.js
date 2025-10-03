@@ -59,6 +59,8 @@ export default defineConfig({
       "@images": fileURLToPath(new URL("./resources/assets/images/", import.meta.url)),
       "@styles": fileURLToPath(new URL("./resources/css/", import.meta.url)),
       "@configured-variables": fileURLToPath(new URL("./resources/css/variables/_template.scss", import.meta.url)),
+      // 🔹 Alias semántico para páginas/módulos
+      "@pages": fileURLToPath(new URL("./resources/js/views/pages", import.meta.url)),
     },
   },
   build: {

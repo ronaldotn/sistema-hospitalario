@@ -5,84 +5,116 @@ namespace App\Http\Controllers\API;
 use App\Models\Patient;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use App\Http\Controllers\API\BaseController as BaseController;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
+use App\Http\Controllers\API\BaseController as BaseController;
 
 class PatientController extends BaseController
 {
-    /**
-     * Display a listing of the resource.
+ /**
+     * 🔹 GET /patients
+     * Obtener lista de pacientes con filtros, ordenamiento y paginación.
+     *
+     * Query Params disponibles:
+     * - identifier: filtra por documento de identidad (like)
+     * - name: filtra por nombre o apellido (like)
+     * - _count: cantidad de registros por página (default: 10)
+     * - _offset: desplazamiento para paginación (default: 0)
+     * - sort: columna para ordenar (default: created_at)
+     * - direction: dirección 'asc' o 'desc' (default: desc)
      */
-    public function index()
-    {
-        //
+public function index(Request $request): JsonResponse
+{
+    // ======================================
+    // 🔹 0️⃣ Inicializar variables con valores por defecto
+    // ======================================
+    $identifier = trim($request->input('identifier', ''));
+    $name       = trim($request->input('name', ''));
+    $count      = (int) ($request->_count ?? 10);
+    $offset     = (int) ($request->_offset ?? 0);
+    $sortColumn = $request->input('sort', 'created_at');
+    $sortDirection = strtolower($request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+    // ======================================
+    // 🔹 1️⃣ Construir query base
+    // ======================================
+    $query = Patient::query();
+
+    // ======================================
+    // 🔹 2️⃣ Aplicar filtros si existen
+    // ======================================
+    if (!empty($identifier)) {
+        $query->where('identifier', 'like', "%{$identifier}%");
     }
+
+    if (!empty($name)) {
+        $query->where(function ($q) use ($name) {
+            $q->where('first_name', 'like', "%{$name}%")
+              ->orWhere('last_name', 'like', "%{$name}%");
+        });
+    }
+
+    // 🔹 Se pueden agregar más filtros futuros aquí, siempre validando con !empty()
+
+    // ======================================
+    // 🔹 3️⃣ Aplicar ordenamiento
+    // ======================================
+    $query->orderBy($sortColumn, $sortDirection);
+
+    // ======================================
+    // 🔹 4️⃣ Aplicar paginación
+    // ======================================
+    $total = $query->count(); // Total de registros sin paginar
+    $patients = $query->offset($offset)
+                      ->limit($count)
+                      ->get();
+
+    // ======================================
+    // 🔹 5️⃣ Preparar datos de respuesta
+    // ======================================
+    $data = [
+        'patients' => $patients,
+        'total' => $total,
+        'count' => $count,
+        'offset' => $offset,
+        'sort' => $sortColumn,
+        'direction' => $sortDirection,
+    ];
+
+    // ======================================
+    // 🔹 6️⃣ Devolver respuesta usando BaseController
+    // ======================================
+    return $this->sendResponse($data, 'Lista de pacientes con filtros, ordenamiento y paginación');
+}
+
 
     /**
      * Store a newly created resource in storage.
      */
 
-   public function store(Request $request)
+
+    public function store(Request $request)
     {
-        // Paso 1: Validar los datos de entrada
-        try {
-            $validatedData = $request->validate([
-                'nombre' => 'required|string|max:255',
-                'apellidos' => 'required|string|max:255',
-                'documento_identidad' => 'required|string|max:255|unique:patients,documento_identidad',
-                'fecha_nacimiento' => 'required|date',
-                'sexo' => 'required|string|in:masculino,femenino,otro',
-                'direccion' => 'nullable|string|max:255',
-                'contacto' => 'nullable|string|max:255',
-                'correo' => 'required|email|max:255|unique:patients,correo',
-            ]);
-        } catch (ValidationException $e) {
-            return response()->json([
-                'message' => 'Error de validación',
-                'errors' => $e->errors()
-            ], 422); // Código 422 Unprocessable Entity
-        }
+        // ✅ Validar campos mínimos (puedes ajustar según tu migration)
+        $validated = $request->validate([
+            'identifier'    => 'required|string|max:50|unique:patients,identifier',
+            'first_name'    => 'required|string|max:100',
+            'last_name'     => 'required|string|max:100',
+            'date_of_birth' => 'nullable|date',
+            'gender'        => 'nullable|in:male,female,other,unknown',
+            'phone'         => 'nullable|string|max:20',
+            'email'         => 'nullable|email|max:100|unique:patients,email',
+            'address'       => 'nullable|string',
+        ]);
 
-        // Paso 2: Validación de duplicados con reglas adicionales
-        $existingPatient = Patient::where('documento_identidad', $validatedData['documento_identidad'])
-            ->orWhere(function ($query) use ($validatedData) {
-                $query->where('nombre', $validatedData['nombre'])
-                      ->where('apellidos', $validatedData['apellidos'])
-                      ->where('fecha_nacimiento', $validatedData['fecha_nacimiento']);
-            })->first();
+        // ✅ Crear el paciente
+        $patient = Patient::create($validated);
 
-        if ($existingPatient) {
-            return response()->json([
-                'message' => 'El paciente ya existe en el sistema.',
-                'patient_uuid' => $existingPatient->uuid
-            ], 409); // Código 409 Conflict
-        }
-
-        // Paso 3: Crear el identificador FHIR
-        $fhirIdentifier = [
-            'system' => 'http://hospital-bolivia.gob.bo/sid/patient-identifier',
-            'value' => Str::uuid()->toString(), // Usamos un UUID para el valor
-            'type' => [
-                'coding' => [
-                    [
-                        'system' => 'http://terminology.hl7.org/CodeSystem/v2-0203',
-                        'code' => 'MR',
-                        'display' => 'Medical Record Number'
-                    ]
-                ]
-            ]
-        ];
-
-        // Paso 4: Persistir en la base de datos con Eloquent
-        $patient = Patient::create(array_merge($validatedData, [
-            'fhir_identifier' => $fhirIdentifier
-        ]));
-
-        // Paso 5: Devolver una respuesta JSON exitosa
+        // ✅ Responder JSON simple
         return response()->json([
-            'message' => 'Paciente registrado exitosamente',
-            'data' => $patient
-        ], 201); // Código 201 Created
+            'message' => 'Paciente creado exitosamente',
+            'data'    => $patient,
+        ], 201);
     }
 
     /**
@@ -90,9 +122,9 @@ class PatientController extends BaseController
      */
     public function show(string $uuid)
     {
-         
+
         $patient = Patient::where('uuid', $uuid)->first();
-// dd($patient);
+        // dd($patient);
         if (!$patient) {
             return response()->json(['message' => 'Paciente no encontrado'], 404);
         }
@@ -101,7 +133,6 @@ class PatientController extends BaseController
             'message' => 'Paciente encontrado',
             'data' => $patient
         ], 200);
-
     }
 
 
