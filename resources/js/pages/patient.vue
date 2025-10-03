@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, computed } from "vue";
 import { useRouter } from "vue-router";
 import { usePatientStore } from "@/stores/patient";
 import FiltersPanel from "@/views/pages/patients/filter.vue";
@@ -10,36 +10,48 @@ const patientStore = usePatientStore();
 // 🔹 Estado de filtros
 const filters = ref({ identifier: "", name: "" });
 
+// 🔹 Paginación
+const currentPage = ref(1);
+const totalPages = computed(() => Math.ceil(patientStore.total / patientStore.count));
+
 // 🔹 Cargar pacientes al montar
 onMounted(() => {
   patientStore.fetchPatients(filters.value);
 });
 
-// 🔹 Función para aplicar filtros desde Filter.vue
+// 🔹 Aplicar filtros
 const applyFilters = (newFilters) => {
   filters.value = { ...newFilters };
   patientStore.offset = 0;
+  currentPage.value = 1;
   patientStore.fetchPatients(filters.value);
 };
 
-// 🔹 Paginación
+// 🔹 Cambiar página
 const changePage = (page) => {
   patientStore.offset = (page - 1) * patientStore.count;
   patientStore.fetchPatients(filters.value);
 };
+
+// 🔹 Mantener currentPage sincronizado si cambia offset
+watch(
+  () => patientStore.offset,
+  (newOffset) => {
+    currentPage.value = Math.floor(newOffset / patientStore.count) + 1;
+  }
+);
 </script>
 
 <template>
+  <!-- Header -->
   <VCard class="mb-4">
     <VCardTitle class="d-flex justify-space-between align-center">
       <h2>Lista de Pacientes</h2>
-      <div class="d-flex gap-2">
-        <VBtn color="primary" @click="router.push({ name: 'patients-create' })">Crear Paciente</VBtn>
-      </div>
+      <VBtn color="primary" @click="router.push({ name: 'patients-create' })">Crear Paciente</VBtn>
     </VCardTitle>
   </VCard>
 
-  <!-- Filtros rápidos + drawer -->
+  <!-- Filtros -->
   <FiltersPanel v-model="filters" @apply-filters="applyFilters" />
 
   <!-- Tabla -->
@@ -75,8 +87,8 @@ const changePage = (page) => {
   <!-- Paginación -->
   <VPagination
     v-if="patientStore.total > patientStore.count"
-    :model-value="Math.floor(patientStore.offset / patientStore.count) + 1"
-    :length="Math.ceil(patientStore.total / patientStore.count)"
+    v-model="currentPage"
+    :length="totalPages"
     @update:model-value="changePage"
   />
 </template>
