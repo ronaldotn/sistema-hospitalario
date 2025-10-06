@@ -1,0 +1,107 @@
+
+/* 🎨 Mejorar estética de los inputs con icono */
+.v-input__prepend-inner .v-icon {
+    color: #4f46e5;
+    /* Indigo moderno */
+}
+
+
+
+
+/* ==========================
+   🔹 Tabla principal
+========================== */
+.table-custom thead th {
+  background-color: #e2e8f0;
+  /* Gris suave pero más marcado que footer */
+  color: #1f2937;
+  /* Texto oscuro */
+  border-bottom: 2px solid #cbd5e1;
+  padding: 1rem 1rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.table-custom tbody td {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0.5rem 1rem;
+}
+
+.table-custom tbody tr:hover {
+  background-color: #f3f4f6;
+}
+
+/* ==========================
+   🔹 Footer / Paginación
+========================== */
+.footer-pagination {
+  background-color: #f8fafc;
+  padding: 0.75rem 1rem;
+}
+
+.divider-footer {
+  background-color: #cbd5e1;
+  margin: 0;
+}
+
+/* ==========================
+   🔹 Utilidades
+========================== */
+.text-center {
+  text-align: center;
+}
+
+.items-center {
+  display: flex;
+  flex-direction: column; /* Esto hace que los hijos se apilen verticalmente */
+  align-items: center;    /* Centrado horizontal */
+  justify-content: center; /* Centrado vertical dentro del contenedor */
+  gap: 0.5rem;            /* Espacio entre elementos */
+}
+
+
+.justify-center {
+  justify-content: center;
+  display: flex;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+.text-gray-400 {
+  color: #9ca3af;
+}
+
+.text-gray-500 {
+  color: #6b7280;
+}
+
+
+/* Escala ligera al pasar el mouse */
+
+/* Botones Desktop: cambio de borde y fondo ligero */
+.hover-light {
+  border-radius: 4px;
+}
+
+.hover-light:hover {
+  border: 2px solid #0a121e; /* Azul brillante */
+  background-color: rgba(59, 130, 246, 0.1); /* Azul claro */
+  cursor: pointer;
+}
+
+/* Items de dropdown: borde y fondo al pasar el mouse */
+.hover-light-list {
+  border-radius: 4px;
+
+}
+
+.hover-light-list:hover {
+  
+  background-color: rgba(59, 130, 246, 0.1); /* Azul claro */
+}
+
+
+

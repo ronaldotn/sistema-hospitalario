@@ -6,7 +6,7 @@ import { registerPlugins } from '@core/utils/plugins'
 import '@core/scss/template/index.scss'
 import '@layouts/styles/index.scss'
 import '@styles/styles.scss'
-
+import '@styles/ralimit.css';
 // Create vue app
 const app = createApp(App)
 

@@ -76,18 +76,18 @@ const quickFilters = ref({});
 const advancedFilters = ref({});
 
 // Funciones
-const applyQuickFilters = () => {
-  // Envía solo filtros rápidos al backend al presionar el botón
-  patientStore.fetchPatients({ ...quickFilters.value, _page:1, _count: perPage.value });
-};
+// const applyQuickFilters = () => {
+//   // Envía solo filtros rápidos al backend al presionar el botón
+//   patientStore.fetchPatients({ ...quickFilters.value, _page:1, _count: perPage.value });
+// };
 
-const applyAdvancedFilters = () => {
-  // Merge filtros rápidos + avanzados
-  const mergedFilters = { ...quickFilters.value, ...advancedFilters.value };
-  patientStore.fetchPatients({ ...mergedFilters, _page:1, _count: perPage.value });
-};
-const changePerPage = (value) => {
-  perPage.value = value;
-  patientStore.fetchPatients({ _page:1, _count: perPage.value });
-};
+// const applyAdvancedFilters = () => {
+//   // Merge filtros rápidos + avanzados
+//   const mergedFilters = { ...quickFilters.value, ...advancedFilters.value };
+//   patientStore.fetchPatients({ ...mergedFilters, _page:1, _count: perPage.value });
+// };
+// const changePerPage = (value) => {
+//   perPage.value = value;
+//   patientStore.fetchPatients({ _page:1, _count: perPage.value });
+// };
 </script>

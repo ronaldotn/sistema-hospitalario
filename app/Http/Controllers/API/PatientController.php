@@ -11,82 +11,77 @@ use App\Http\Controllers\API\BaseController as BaseController;
 
 class PatientController extends BaseController
 {
- /**
-     * 🔹 GET /patients
-     * Obtener lista de pacientes con filtros, ordenamiento y paginación.
+    /**
+     * ======================================
+     * 🔹 INDEX – Obtener lista de pacientes
+     * ======================================
+     * Este método entrega la lista de pacientes paginada directamente.
+     * Laravel Eloquent con paginate() se encarga automáticamente de:
+     * - Conteo total de registros
+     * - Número de páginas
+     * - Offset y página actual
+     *
+     * El frontend recibe únicamente la colección de pacientes lista para renderizar.
      *
      * Query Params disponibles:
      * - identifier: filtra por documento de identidad (like)
      * - name: filtra por nombre o apellido (like)
      * - _count: cantidad de registros por página (default: 10)
-     * - _offset: desplazamiento para paginación (default: 0)
+     * - _page: número de página (default: 1, manejado automáticamente por paginate)
      * - sort: columna para ordenar (default: created_at)
      * - direction: dirección 'asc' o 'desc' (default: desc)
      */
-public function index(Request $request): JsonResponse
-{
-    // ======================================
-    // 🔹 0️⃣ Inicializar variables con valores por defecto
-    // ======================================
-    $identifier = trim($request->input('identifier', ''));
-    $name       = trim($request->input('name', ''));
-    $count      = (int) ($request->_count ?? 10);
-    $offset     = (int) ($request->_offset ?? 0);
-    $sortColumn = $request->input('sort', 'created_at');
-    $sortDirection = strtolower($request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
+    public function index(Request $request): JsonResponse
+    {
+        // ======================================
+        // 🔹 0️⃣ Valores por defecto y seguridad
+        // ======================================
+        $identifier    = trim($request->input('identifier', ''));
+        $name          = trim($request->input('name', ''));
+        $count         = (int) ($request->_count ?? 10);   // Registros por página
+        $sortColumn    = $request->input('sort', 'created_at');
+        $sortDirection = strtolower($request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
 
-    // ======================================
-    // 🔹 1️⃣ Construir query base
-    // ======================================
-    $query = Patient::query();
+        // ======================================
+        // 🔹 1️⃣ Construir query base
+        // ======================================
+        $query = Patient::query();
 
-    // ======================================
-    // 🔹 2️⃣ Aplicar filtros si existen
-    // ======================================
-    if (!empty($identifier)) {
-        $query->where('identifier', 'like', "%{$identifier}%");
+        // ======================================
+        // 🔹 2️⃣ Aplicar filtros dinámicos
+        // ======================================
+        if (!empty($identifier)) {
+            $query->where('identifier', 'like', "%{$identifier}%");
+        }
+
+        if (!empty($name)) {
+            $query->where(function ($q) use ($name) {
+                $q->where('first_name', 'like', "%{$name}%")
+                    ->orWhere('last_name', 'like', "%{$name}%");
+            });
+        }
+
+        // 🔮 Espacio futuro para filtros adicionales
+        // Ej: edad, sexo, estado, doctor, rango de fechas
+        // if (!empty($request->input('age'))) { ... }
+
+        // ======================================
+        // 🔹 3️⃣ Ordenamiento
+        // ======================================
+        $query->orderBy($sortColumn, $sortDirection);
+
+        // ======================================
+        // 🔹 4️⃣ Paginación automática
+        // ======================================
+        // paginate() maneja automáticamente offset, total, páginas
+        $patients = $query->paginate($count);
+
+        // ======================================
+        // 🔹 5️⃣ Devolver respuesta JSON
+        // ======================================
+        // Solo enviamos la colección de pacientes, Eloquent incluye la info de paginación
+        return $this->sendResponse($patients, 'Lista de pacientes filtrada y ordenada');
     }
-
-    if (!empty($name)) {
-        $query->where(function ($q) use ($name) {
-            $q->where('first_name', 'like', "%{$name}%")
-              ->orWhere('last_name', 'like', "%{$name}%");
-        });
-    }
-
-    // 🔹 Se pueden agregar más filtros futuros aquí, siempre validando con !empty()
-
-    // ======================================
-    // 🔹 3️⃣ Aplicar ordenamiento
-    // ======================================
-    $query->orderBy($sortColumn, $sortDirection);
-
-    // ======================================
-    // 🔹 4️⃣ Aplicar paginación
-    // ======================================
-    $total = $query->count(); // Total de registros sin paginar
-    $patients = $query->offset($offset)
-                      ->limit($count)
-                      ->get();
-
-    // ======================================
-    // 🔹 5️⃣ Preparar datos de respuesta
-    // ======================================
-    $data = [
-        'patients' => $patients,
-        'total' => $total,
-        'count' => $count,
-        'offset' => $offset,
-        'sort' => $sortColumn,
-        'direction' => $sortDirection,
-    ];
-
-    // ======================================
-    // 🔹 6️⃣ Devolver respuesta usando BaseController
-    // ======================================
-    return $this->sendResponse($data, 'Lista de pacientes con filtros, ordenamiento y paginación');
-}
-
 
     /**
      * Store a newly created resource in storage.

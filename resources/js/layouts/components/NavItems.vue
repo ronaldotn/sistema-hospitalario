@@ -21,6 +21,20 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
       }"
     />
   </VerticalNavGroup>
+  <!-- 👉 componets RALIMIT -->
+  <VerticalNavGroup
+    :item="{
+      title: 'Components RALIMIT',
+      icon: 'bx-home-smile',
+    }"
+  >
+    <VerticalNavLink
+      :item="{
+        title: 'filter',
+        to: '/components/filter',
+      }"
+    />
+  </VerticalNavGroup>
 
   <!-- 👉 Apps & Pages -->
   <VerticalNavSectionTitle
@@ -41,6 +55,27 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
       title: 'Patients',
       icon: 'bx-user-plus',
       to: '/patients/index',
+    }"
+  />
+ <VerticalNavLink
+    :item="{
+      title: 'Encounters',
+      icon: 'bx-user-plus',
+      to: '/encounters/index',
+    }"
+  />
+ <VerticalNavLink
+    :item="{
+      title: 'Organizations',
+      icon: 'bx-user-plus',
+      to: '/organizations/index',
+    }"
+  />
+ <VerticalNavLink
+    :item="{
+      title: 'Practitioners',
+      icon: 'bx-user-plus',
+      to: '/practitioners/index',
     }"
   />
   <VerticalNavLink

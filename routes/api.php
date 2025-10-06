@@ -3,7 +3,11 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
+
+use App\Http\Controllers\EncounterController;
 use App\Http\Controllers\API\PatientController;
+use App\Http\Controllers\OrganizationController;
+use App\Http\Controllers\PractitionerController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -15,3 +19,8 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('/patients', [PatientController::class, 'index']);
 Route::post('/patients', [PatientController::class, 'store']);
 Route::get('/patients/{uuid}', [PatientController::class, 'show']);
+Route::get('/practitioners', [PractitionerController::class, 'index']);
+Route::post('/practitioners', [PractitionerController::class, 'store']);
+Route::apiResource('organizations', OrganizationController::class)
+    ->parameters(['organizations' => 'uuid']);
+Route::apiResource('encounters', EncounterController::class);

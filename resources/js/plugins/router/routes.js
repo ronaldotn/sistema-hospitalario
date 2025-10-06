@@ -72,34 +72,49 @@ export const routes = [
           { path: 'edit/:uuid', name: 'patients-edit', component: () => import('@/views/pages/patients/edit.vue') },
         ],
       },
+      // ✅ Módulo Components Ralimit
+      {
+        path: 'components',
+        beforeEnter: routeAuthGuard,  // <-- guard aplicado al módulo completo
+        children: [
+          { path: 'filter', name: 'components', component: () => import('@/pages/com_rali.vue') },
+          ],
+      },
 
 
       // ✅ Módulo Practitioner con prefijo
-      // {
-      //   path: 'practitioners',
-      //   children: [
-      //     {
-      //       path: 'show',
-      //       name: 'practitioners-show',
-      //       component: () => import('@/pages/practitioners/Show.vue'),
-      //     },
-      //     {
-      //       path: 'index',
-      //       name: 'practitioners-index',
-      //       component: () => import('@/pages/practitioners/Index.vue'),
-      //     },
-      //     {
-      //       path: 'create',
-      //       name: 'practitioners-create',
-      //       component: () => import('@/pages/practitioners/Create.vue'),
-      //     },
-      //     {
-      //       path: 'edit',
-      //       name: 'practitioners-edit',
-      //       component: () => import('@/pages/practitioners/Edit.vue'),
-      //     },
-      //   ],
-      // },
+      {
+        path: 'practitioners',
+         beforeEnter: routeAuthGuard,  // <-- guard aplicado al módulo completo
+        children: [
+          { path: 'index', name: 'practitioners-index', component: () => import('@/pages/practitioner.vue') },
+          { path: 'show/:uuid', name: 'practitioners-show', component: () => import('@pages/practitioners/show.vue') },
+          { path: 'create', name: 'practitioners-create', component: () => import('@pages/practitioners/create.vue') },
+          { path: 'edit/:uuid', name: 'practitioners-edit', component: () => import('@pages/practitioners/edit.vue') },
+        ],
+      },
+      // ✅ Módulo Organizations con prefijo
+      {
+        path: 'organizations',
+         beforeEnter: routeAuthGuard,  // <-- guard aplicado al módulo completo
+        children: [
+          { path: 'index', name: 'organization-index', component: () => import('@/pages/organizations.vue') },
+          { path: 'show/:uuid', name: 'organization-show', component: () => import('@pages/organizations/show.vue') },
+          { path: 'create', name: 'organization-create', component: () => import('@pages/organizations/create.vue') },
+          { path: 'edit/:uuid', name: 'organization-edit', component: () => import('@pages/organizations/edit.vue') },
+        ],
+      },
+      // ✅ Módulo Encounters con prefijo
+      {
+        path: 'encounters',
+         beforeEnter: routeAuthGuard,  // <-- guard aplicado al módulo completo
+        children: [
+          { path: 'index', name: 'encounter-index', component: () => import('@/pages/encounter.vue') },
+          { path: 'show/:id', name: 'encounter-show', component: () => import('@pages/encounters/show.vue') },
+          { path: 'create', name: 'encounter-create', component: () => import('@pages/encounters/create.vue') },
+          { path: 'edit/:id', name: 'encounter-edit', component: () => import('@pages/encounters/edit.vue') },
+        ],
+      },
     ],
   },
   {

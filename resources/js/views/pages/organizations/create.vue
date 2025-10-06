@@ -1,12 +1,12 @@
 <script setup>
 // 📦 Imports
 import { ref } from "vue";
-import { useRouter } from "vue-router";   // Para redirecciones
-import { usePatientStore } from "@/stores/patient"; // Nuestro Store global
+import { useRouter } from "vue-router";   
+import { useOrganizationStore } from "@/stores/organization"; // Store global
 
 // 🚦 Router y Store
 const router = useRouter();
-const patientStore = usePatientStore();
+const organizationStore = useOrganizationStore();
 
 // 🔹 Estado local del formulario
 const form = ref({});
@@ -18,12 +18,11 @@ const errors = ref({});
 const submitForm = async () => {
   errors.value = {}; // limpiamos errores previos
   try {
-    const response = await patientStore.createPatient(form.value);
+    const response = await organizationStore.create(form.value);
     if (response) {
-      router.push({ name: "patients-index" });
+      router.push({ name: "organization-index" });
     }
   } catch (err) {
-    // 👇 capturamos errores 422
     if (err.response?.status === 422) {
       errors.value = err.response.data.errors || {};
     }
@@ -35,9 +34,9 @@ const submitForm = async () => {
   <!-- 🏷️ Encabezado -->
   <VCard class="mb-4 elevation-2 rounded-lg">
     <VCardTitle class="d-flex justify-space-between align-center px-6 py-4">
-      <h2 class="text-h5 font-weight-bold text-primary">Crear Paciente</h2>
+      <h2 class="text-h5 font-weight-bold text-primary">Crear Organización</h2>
       <VBtn prepend-icon="bx-arrow-back" color="secondary" variant="tonal"
-        @click="router.push({ name: 'patients-index' })">
+        @click="router.push({ name: 'organization-index' })">
         Volver
       </VBtn>
     </VCardTitle>
@@ -52,77 +51,35 @@ const submitForm = async () => {
           <!-- Nombre -->
           <VCol cols="12" md="6">
             <VTextField 
-              v-model="form.first_name" 
-              prepend-inner-icon="bx-user" 
-              label="Nombre"
-              placeholder="John"
+              v-model="form.name" 
+              prepend-inner-icon="bx-building" 
+              label="Nombre de la Organización"
+              placeholder="Mi Empresa S.A." 
               density="comfortable" 
               required
-              :error="!!errors.first_name"
-              :error-messages="errors.first_name"
+              :error="!!errors.name"
+              :error-messages="errors.name"
             />
           </VCol>
 
-          <!-- Apellidos -->
-          <VCol cols="12" md="6">
-            <VTextField 
-              v-model="form.last_name" 
-              prepend-inner-icon="bx-user" 
-              label="Apellidos"
-              placeholder="Doe"
-              density="comfortable" 
-              required
-              :error="!!errors.last_name"
-              :error-messages="errors.last_name"
-            />
-          </VCol>
-
-          <!-- Documento -->
-          <VCol cols="12" md="6">
-            <VTextField 
-              v-model="form.identifier" 
-              prepend-inner-icon="bx-id-card"
-              label="Documento de Identidad"
-              placeholder="12345678" 
-              density="comfortable" 
-              required
-              :error="!!errors.identifier"
-              :error-messages="errors.identifier"
-            />
-          </VCol>
-
-          <!-- Fecha de nacimiento -->
-          <VCol cols="12" md="6">
-            <VTextField 
-              v-model="form.date_of_birth" 
-              prepend-inner-icon="bx-calendar"
-              label="Fecha de Nacimiento" 
-              type="date" 
-              density="comfortable" 
-              required
-              :error="!!errors.date_of_birth"
-              :error-messages="errors.date_of_birth"
-            />
-          </VCol>
-
-          <!-- Sexo -->
+          <!-- Tipo -->
           <VCol cols="12" md="6">
             <VSelect 
-              v-model="form.gender" 
-              prepend-inner-icon="bx-gender-male-female" 
-              label="Sexo" 
+              v-model="form.type" 
+              prepend-inner-icon="bx-list-check" 
+              label="Tipo de Organización" 
               :items="[
-                { title: 'Masculino', value: 'male' },
-                { title: 'Femenino', value: 'female' },
-                { title: 'Otro', value: 'other' },
-                { title: 'Desconocido', value: 'unknown' }
+                { title: 'Privada', value: 'private' },
+                { title: 'Pública', value: 'public' },
+                { title: 'ONG', value: 'ngo' },
+                { title: 'Otro', value: 'other' }
               ]" 
               item-title="title" 
               item-value="value" 
               density="comfortable" 
               required
-              :error="!!errors.gender"
-              :error-messages="errors.gender"
+              :error="!!errors.type"
+              :error-messages="errors.type"
             />
           </VCol>
 
@@ -131,7 +88,7 @@ const submitForm = async () => {
             <VTextField 
               v-model="form.address" 
               prepend-inner-icon="bx-map" 
-              label="Dirección"
+              label="Dirección" 
               placeholder="Calle 123, Ciudad" 
               density="comfortable"
               :error="!!errors.address"
@@ -158,7 +115,7 @@ const submitForm = async () => {
               v-model="form.email" 
               prepend-inner-icon="bx-envelope" 
               label="Correo"
-              placeholder="correo@ejemplo.com" 
+              placeholder="contacto@empresa.com" 
               type="email" 
               density="comfortable"
               :error="!!errors.email"

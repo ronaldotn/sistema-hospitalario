@@ -54,6 +54,7 @@ import UserProfile from '@/layouts/components/UserProfile.vue'
 
         <UserProfile />
       </div>
+        <load />
     </template>
 
     <template #vertical-nav-header="{ toggleIsOverlayNavActive }">
