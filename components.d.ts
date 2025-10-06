@@ -11,6 +11,7 @@ declare module 'vue' {
     CardStatisticsVertical: typeof import('./resources/js/@core/components/cards/CardStatisticsVertical.vue')['default']
     CardStatisticsWithImages: typeof import('./resources/js/@core/components/cards/CardStatisticsWithImages.vue')['default']
     ConfirmModal: typeof import('./resources/js/components/ConfirmModal.vue')['default']
+    Create: typeof import('./resources/js/components/create.vue')['default']
     ErrorHeader: typeof import('./resources/js/components/ErrorHeader.vue')['default']
     FlexibleTable: typeof import('./resources/js/components/FlexibleTable.vue')['default']
     Load: typeof import('./resources/js/components/load.vue')['default']
@@ -20,6 +21,7 @@ declare module 'vue' {
     StatusBadge: typeof import('./resources/js/components/StatusBadge.vue')['default']
     StatusMessage: typeof import('./resources/js/components/StatusMessage.vue')['default']
     ThemeSwitcher: typeof import('./resources/js/@core/components/ThemeSwitcher.vue')['default']
+    Update: typeof import('./resources/js/components/update.vue')['default']
     UpgradeToPro: typeof import('./resources/js/components/UpgradeToPro.vue')['default']
     VueApexCharts: typeof import('vue3-apexcharts')['default']
   }

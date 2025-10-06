@@ -6,14 +6,7 @@ import { useEncounterStore } from "@/stores/encounter";
 const router = useRouter();
 const encounterStore = useEncounterStore();
 
-const form = ref({
-  patient_id: null,
-  encounter_type: "",
-  status: "open",
-  encounter_date: "",
-  practitioner_id: null,
-  reason: ""
-});
+const form = ref({});
 
 const errors = ref({});
 

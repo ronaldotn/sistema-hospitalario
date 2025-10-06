@@ -74,6 +74,7 @@ const goEdit = (id) => router.push({ name: `${routePrefix}-edit`, params: { id }
       <td>{{ item.id }}</td>
       <td>{{ item.patient?.last_name || "–" }}</td>
       <td>{{ item.encounter_type }}</td>
+      <td><StatusBadge :status="item.encounter_type" /></td>
       <td>{{ item.status }}</td>
       <td>{{ item.encounter_date }}</td>
       <td>{{ item.practitioner?.first_name }} {{ item.practitioner?.last_name }}</td>
