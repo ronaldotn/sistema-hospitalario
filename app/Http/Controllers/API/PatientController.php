@@ -2,123 +2,129 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Models\Patient;
-use Illuminate\Support\Str;
-use Illuminate\Http\Request;
+use App\Models\Patient; // Modelo de pacientes
+use Illuminate\Http\Request; // Maneja las solicitudes HTTP
 use App\Http\Controllers\API\BaseController as BaseController;
-use Illuminate\Validation\ValidationException;
 
 class PatientController extends BaseController
 {
     /**
-     * Display a listing of the resource.
+     * Listar todos los pacientes
      */
     public function index()
     {
-        //
-    }
+        // Trae todos los pacientes de la base de datos
+        $patients = Patient::all();
 
-    /**
-     * Store a newly created resource in storage.
-     */
-
-   public function store(Request $request)
-    {
-        // Paso 1: Validar los datos de entrada
-        try {
-            $validatedData = $request->validate([
-                'nombre' => 'required|string|max:255',
-                'apellidos' => 'required|string|max:255',
-                'documento_identidad' => 'required|string|max:255|unique:patients,documento_identidad',
-                'fecha_nacimiento' => 'required|date',
-                'sexo' => 'required|string|in:masculino,femenino,otro',
-                'direccion' => 'nullable|string|max:255',
-                'contacto' => 'nullable|string|max:255',
-                'correo' => 'required|email|max:255|unique:patients,correo',
-            ]);
-        } catch (ValidationException $e) {
-            return response()->json([
-                'message' => 'Error de validación',
-                'errors' => $e->errors()
-            ], 422); // Código 422 Unprocessable Entity
-        }
-
-        // Paso 2: Validación de duplicados con reglas adicionales
-        $existingPatient = Patient::where('documento_identidad', $validatedData['documento_identidad'])
-            ->orWhere(function ($query) use ($validatedData) {
-                $query->where('nombre', $validatedData['nombre'])
-                      ->where('apellidos', $validatedData['apellidos'])
-                      ->where('fecha_nacimiento', $validatedData['fecha_nacimiento']);
-            })->first();
-
-        if ($existingPatient) {
-            return response()->json([
-                'message' => 'El paciente ya existe en el sistema.',
-                'patient_uuid' => $existingPatient->uuid
-            ], 409); // Código 409 Conflict
-        }
-
-        // Paso 3: Crear el identificador FHIR
-        $fhirIdentifier = [
-            'system' => 'http://hospital-bolivia.gob.bo/sid/patient-identifier',
-            'value' => Str::uuid()->toString(), // Usamos un UUID para el valor
-            'type' => [
-                'coding' => [
-                    [
-                        'system' => 'http://terminology.hl7.org/CodeSystem/v2-0203',
-                        'code' => 'MR',
-                        'display' => 'Medical Record Number'
-                    ]
-                ]
-            ]
-        ];
-
-        // Paso 4: Persistir en la base de datos con Eloquent
-        $patient = Patient::create(array_merge($validatedData, [
-            'fhir_identifier' => $fhirIdentifier
-        ]));
-
-        // Paso 5: Devolver una respuesta JSON exitosa
+        // Devuelve JSON con mensaje y datos
         return response()->json([
-            'message' => 'Paciente registrado exitosamente',
-            'data' => $patient
-        ], 201); // Código 201 Created
+            'message' => 'Listado de pacientes',
+            'data' => $patients
+        ], 200);
     }
 
     /**
-     * Display the specified resource.
+     * Crear un nuevo paciente
      */
-    public function show(string $uuid)
+    public function store(Request $request)
     {
-         
-        $patient = Patient::where('uuid', $uuid)->first();
-// dd($patient);
+        // Validación mínima de campos esenciales
+        $validated = $request->validate([
+            'identifier' => 'required|unique:patients,identifier',
+            'first_name' => 'required|string|max:100',
+            'last_name'  => 'required|string|max:100',
+            'date_of_birth' => 'nullable|date',
+            'gender' => 'nullable|in:male,female,other,unknown',
+            'phone' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:100',
+            'address' => 'nullable|string',
+        ]);
+
+        // Crear paciente en la base de datos
+        $patient = Patient::create($validated);
+
+        // Respuesta JSON
+        return response()->json([
+            'message' => 'Paciente creado exitosamente',
+            'data' => $patient
+        ], 201);
+    }
+
+    /**
+     * Mostrar un paciente específico
+     */
+    public function show($id)
+    {
+        $patient = Patient::find($id);
+
         if (!$patient) {
-            return response()->json(['message' => 'Paciente no encontrado'], 404);
+            return response()->json([
+                'message' => 'Paciente no encontrado'
+            ], 404);
         }
 
         return response()->json([
             'message' => 'Paciente encontrado',
             'data' => $patient
         ], 200);
-
-    }
-
-
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Patient $patient)
-    {
-        //
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Actualizar un paciente existente
      */
-    public function destroy(Patient $patient)
+    public function update(Request $request, $id)
     {
-        //
+        // Buscar paciente por id
+        $patient = Patient::find($id);
+
+        if (!$patient) {
+            return response()->json([
+                'message' => 'Paciente no encontrado'
+            ], 404);
+        }
+
+        // Validación de campos que pueden actualizarse
+        $validated = $request->validate([
+            'identifier' => 'sometimes|required|unique:patients,identifier,' . $id,
+            'first_name' => 'sometimes|required|string|max:100',
+            'last_name'  => 'sometimes|required|string|max:100',
+            'date_of_birth' => 'nullable|date',
+            'gender' => 'nullable|in:male,female,other,unknown',
+            'phone' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:100',
+            'address' => 'nullable|string',
+        ]);
+
+        // Actualizar paciente
+        $patient->update($validated);
+
+        // Respuesta JSON
+        return response()->json([
+            'message' => 'Paciente actualizado exitosamente',
+            'data' => $patient
+        ], 200);
+    }
+
+    /**
+     * Eliminar un paciente
+     */
+    public function destroy($id)
+    {
+        // Buscar paciente por id
+        $patient = Patient::find($id);
+
+        if (!$patient) {
+            return response()->json([
+                'message' => 'Paciente no encontrado'
+            ], 404);
+        }
+
+        // Eliminar paciente
+        $patient->delete();
+
+        // Respuesta JSON
+        return response()->json([
+            'message' => 'Paciente eliminado exitosamente'
+        ], 200);
     }
 }

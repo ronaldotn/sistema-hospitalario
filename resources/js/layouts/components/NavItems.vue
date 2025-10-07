@@ -36,6 +36,13 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
       to: '/account-settings',
     }"
   />
+  <VerticalNavLink
+    :item="{
+      title: 'Paciente',
+      icon: 'bx-user',
+      to: '/patients-index', //ruta del front-end el path
+    }"
+  />
 
   <VerticalNavLink
     :item="{
