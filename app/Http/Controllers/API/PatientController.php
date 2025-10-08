@@ -2,25 +2,68 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\API\BaseController;
 use App\Models\Patient;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use App\Http\Controllers\API\BaseController;
 
 class PatientController extends BaseController
 {
     /**
      * Listar todos los pacientes
      */
-    public function index()
+ public function index(Request $request): JsonResponse
     {
-        // Trae todos los pacientes de la base de datos
-        $patients = Patient::all();
+        // ======================================
+        // 🔹 0️⃣ Valores por defecto y seguridad
+        // ======================================
+        $count      = (int) ($request->_count ?? 10);            // Registros por página
+        $firstName  = trim($request->input('first_name', ''));   // Filtro nombre
+        $lastName   = trim($request->input('last_name', ''));    // Filtro apellido
+        $active     = $request->has('active') ? $request->boolean('active') : null; // Filtro estado
 
-        // Devuelve JSON con mensaje y datos
-        return response()->json([
-            'message' => 'Listado de pacientes',
-            'data' => $patients
-        ], 200);
+        // ======================================
+        // 🔹 1️⃣ Construir query base
+        // ======================================
+        $query = Patient::query();
+
+        // ======================================
+        // 🔹 2️⃣ Aplicar filtros dinámicos
+        // ======================================
+        if (!empty($firstName)) {
+            $query->where('first_name', 'like', "%{$firstName}%");
+        }
+
+        if (!empty($lastName)) {
+            $query->where('last_name', 'like', "%{$lastName}%");
+        }
+
+        if (!is_null($active)) {
+            $query->where('active', $active);
+        }
+
+        // 🔮 Futuro: specialty, organization_id, rangos de fechas, etc.
+        // if ($specialty = $request->input('specialty')) {
+        //     $query->where('specialty', $specialty);
+        // }
+
+        // ======================================
+        // 🔹 3️⃣ Ordenamiento jerárquico
+        // ======================================
+        // Primero por fecha de creación DESC, luego por nombre ASC como desempate
+        $query->orderBy('created_at', 'desc')
+            ->orderBy('first_name', 'asc');
+
+        // ======================================
+        // 🔹 4️⃣ Paginación automática
+        // ======================================
+        // paginate() maneja automáticamente offset, total, páginas
+        $practitioners = $query->paginate($count);
+
+        // ======================================
+        // 🔹 5️⃣ Devolver respuesta JSON
+        // ======================================
+        return $this->sendResponse($practitioners, 'Lista de profesionales filtrada y ordenada');
     }
 
     /**
