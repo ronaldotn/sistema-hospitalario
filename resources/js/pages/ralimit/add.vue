@@ -2,7 +2,7 @@
 /* ============================================================
    🔹 IMPORTACIONES PRINCIPALES
 ============================================================ */
-import { reactive, ref } from "vue";
+import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useRalimitStore } from "@/stores/ralimit"; // Store para CRUD de pacientes
 
@@ -12,8 +12,8 @@ import { useRalimitStore } from "@/stores/ralimit"; // Store para CRUD de pacien
 const router = useRouter();
 const Store = useRalimitStore();
 
-// 🎯 Form reactivo usando reactive
-const form = reactive({
+// 🎯 Form reactivo usando ref
+const form = ref({
   patient_id: '',
   identifier: '',
   first_name: '',
@@ -26,7 +26,7 @@ const form = reactive({
 });
 
 // 💥 Objeto para errores de validación
-const errors = reactive({});
+const errors = ref({});
 
 /* ============================================================
    🔹 Función para enviar el formulario
