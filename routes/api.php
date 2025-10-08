@@ -9,6 +9,7 @@ use App\Http\Controllers\API\PatientController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\PractitionerController;
 
+
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
