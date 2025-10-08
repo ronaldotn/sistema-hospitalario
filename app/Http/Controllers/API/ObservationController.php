@@ -5,7 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Models\Observation;
 use Illuminate\Http\Request;
 
-class ObservationController extends Controller
+class ObservationController extends BaseController
 {
     /**
      * Display a listing of the resource.

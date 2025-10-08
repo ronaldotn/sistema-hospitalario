@@ -5,7 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Models\AuditEvents;
 use Illuminate\Http\Request;
 
-class AuditEventsController extends Controller
+class AuditEventsController extends BaseController
 {
     /**
      * Display a listing of the resource.

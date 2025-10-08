@@ -5,7 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Models\DiagnosticReport;
 use Illuminate\Http\Request;
 
-class DiagnosticReportController extends Controller
+class DiagnosticReportController extends BaseController
 {
     /**
      * Display a listing of the resource.

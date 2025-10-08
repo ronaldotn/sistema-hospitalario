@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\API\BaseController;
 use App\Models\Patient;
 use Illuminate\Http\Request;
 
-class PatientController extends Controller
+class PatientController extends BaseController
 {
     /**
      * Listar todos los pacientes

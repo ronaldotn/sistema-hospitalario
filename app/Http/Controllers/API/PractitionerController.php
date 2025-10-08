@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\API;
 
 use Faker\Provider\Base;
 use App\Models\Practitioner;

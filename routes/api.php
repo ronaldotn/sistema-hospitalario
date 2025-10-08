@@ -4,10 +4,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
 
-use App\Http\Controllers\EncounterController;
+use App\Http\Controllers\API\EncounterController;
 use App\Http\Controllers\API\PatientController;
-use App\Http\Controllers\OrganizationController;
-use App\Http\Controllers\PractitionerController;
+use App\Http\Controllers\API\OrganizationController;
+use App\Http\Controllers\API\PractitionerController;
 
 
 Route::post('/register', [AuthController::class, 'register']);
