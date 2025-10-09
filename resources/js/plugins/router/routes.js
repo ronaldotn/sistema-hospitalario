@@ -72,6 +72,39 @@ export const routes = [
           { path: 'edit/:uuid', name: 'patients-edit', component: () => import('@/views/pages/patients/edit.vue') },
         ],
       },
+      // ✅ Módulo Diagnósticos con prefijo
+      {
+        path: 'diagnostics',
+        beforeEnter: routeAuthGuard,  // <-- guard aplicado al módulo completo
+        children: [
+          { path: 'index', name: 'diagnostics-index', component: () => import('@/pages/diagnostic.vue') },
+          { path: 'show/:uuid', name: 'diagnostics-show', component: () => import('@pages/diagnostics/show.vue') },
+          { path: 'create', name: 'diagnostics-create', component: () => import('@pages/diagnostics/create.vue') },
+          { path: 'edit/:uuid', name: 'diagnostics-edit', component: () => import('@pages/diagnostics/edit.vue') },
+        ],
+      },
+      // ✅ Módulo Consentimientos con prefijo
+      {
+        path: 'consents',
+        beforeEnter: routeAuthGuard,  // <-- guard aplicado al módulo completo
+        children: [
+          { path: 'index', name: 'consents-index', component: () => import('@/pages/consent.vue') },
+          { path: 'show/:uuid', name: 'consents-show', component: () => import('@pages/consents/show.vue') },
+          { path: 'create', name: 'consents-create', component: () => import('@pages/consents/create.vue') },
+          { path: 'edit/:uuid', name: 'consents-edit', component: () => import('@pages/consents/edit.vue') },
+        ],
+      },
+      // ✅ Módulo Condiciones con prefijo
+      {
+        path: 'conditions',
+        beforeEnter: routeAuthGuard,  // <-- guard aplicado al módulo completo
+        children: [
+          { path: 'index', name: 'conditions-index', component: () => import('@/pages/condition.vue') },
+          { path: 'show/:id', name: 'conditions-show', component: () => import('@pages/conditions/show.vue') },
+          { path: 'create', name: 'conditions-create', component: () => import('@pages/conditions/create.vue') },
+          { path: 'edit/:id', name: 'conditions-edit', component: () => import('@pages/conditions/edit.vue') },
+        ],
+      },
       // ✅ Módulo Components Ralimit
       {
         path: 'components',

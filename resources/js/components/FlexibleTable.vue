@@ -3,59 +3,26 @@ import { ref, computed, watch, onMounted } from "vue";
 
 /**
  * =====================================
- * 📘 FlexibleTable Component
+ * 📘 FlexibleTable - Versión Mejorada 2025
  * =====================================
- * Tabla reutilizable para mostrar datos con:
+ *
+ * Tabla genérica y reusable con:
  *  - Encabezados dinámicos
  *  - Estado de carga
- *  - Estado vacío
+ *  - Manejo de datos vacíos
  *  - Paginación integrada
+ *  - Compatible con cualquier store Pinia
  *
- * 👉 Ideal para trabajar con Pinia Stores que tengan:
- *   - Un array de datos
- *   - Un meta con paginación
- *   - Un método de fetch (ej: fetch, fetchPatients, etc.)
- *
- * -------------------------------------
- * 🔹 Props disponibles
- * -------------------------------------
- * | Prop        | Tipo     | Default       | Descripción                                    |
- * |-------------|----------|---------------|------------------------------------------------|
- * | store       | Object   | (requerido)   | Store Pinia con datos, meta y métodos fetch.   |
- * | value       | String   | "model"       | Nombre del array de datos en el store.         |
- * | columns     | Array    | (requerido)   | Encabezados de tabla.                         |
- * | title       | String   | "Sin datos"   | Texto del título cuando no hay información.    |
- * | text        | String   | "No hay..."   | Texto descriptivo si no hay información.       |
- * | icon        | String   | "bx-info..."  | Ícono a mostrar cuando no hay datos.           |
- * | method      | String   | "fetch"       | Método del store para cargar datos.            |
- *
- * -------------------------------------
- * 🔹 Ejemplo de uso
- * -------------------------------------
- *
- * ✅ Caso 1: Store con `fetch()`
- * <FlexibleTable
- *   :store="patientStore"
- *   :columns="['Nombre', 'DNI', 'Edad']"
- *   value="patients"
- * />
- *
- * ✅ Caso 2: Store con `fetchPatients()`
- * <FlexibleTable
- *   :store="patientStore"
- *   method="fetchPatients"
- *   :columns="['Nombre', 'DNI', 'Edad']"
- *   value="patients"
- * />
- *
- * ✅ Caso 3: Otro módulo (ej. practitioners)
- * <FlexibleTable
- *   :store="practitionerStore"
- *   method="fetchPractitioners"
- *   :columns="['Nombre', 'Especialidad', 'Contacto']"
- *   value="practitioners"
- * />
- *
+ * 🔹 Props
+ * | Prop    | Tipo   | Default | Descripción |
+ * |---------|--------|---------|-------------|
+ * | store   | Object | -       | Store Pinia con datos, meta y métodos fetch |
+ * | value   | String | "model"| Nombre del array de datos en el store |
+ * | columns | Array  | -       | Encabezados de tabla |
+ * | title   | String | "Sin datos" | Texto cuando no hay registros |
+ * | text    | String | "No hay información" | Texto descriptivo |
+ * | icon    | String | "bx-info-circle" | Icono cuando no hay datos |
+ * | method  | String | "fetch" | Método del store para cargar datos |
  */
 
 const props = defineProps({
@@ -65,30 +32,53 @@ const props = defineProps({
   title: { type: String, default: "Sin datos" },
   text: { type: String, default: "No hay información disponible" },
   icon: { type: String, default: "bx-info-circle" },
-
-  // 🔹 Método a invocar dentro del store
   method: { type: String, default: "fetch" },
 });
 
+// ---------------------------
+// 🔹 Estados internos
+// ---------------------------
 const currentPage = ref(1);
+
+// Computed para total de páginas según meta del store
 const totalPages = computed(() => props.store.meta?.last_page || 1);
 
+// Computed para acceder al array de datos dinámicamente
 const displayData = computed(() => props.store[props.value] ?? []);
 
-const loadData = (page = 1) => {
-  const method = props.store[props.method];
-  if (typeof method === "function") {
-    method({ page });
-    currentPage.value = page;
+// ---------------------------
+// 🔹 Función principal de carga
+// ---------------------------
+const loadData = async (page = 1, extraParams = {}) => {
+  const fetchMethod = props.store[props.method];
+
+  if (typeof fetchMethod === "function") {
+    try {
+      // Llamada async con page y posibles filtros
+      await fetchMethod({ page, ...extraParams });
+      currentPage.value = page;
+    } catch (err) {
+      console.error(`❌ Error ejecutando "${props.method}":`, err);
+    }
   } else {
     console.error(`❌ El store no tiene el método "${props.method}"`);
   }
 };
 
+// ---------------------------
+// 🔹 Cambiar página
+// ---------------------------
 const changePage = (page) => loadData(page);
 
+// ---------------------------
+// 🔹 Observador de filtros
+// ---------------------------
 watch(() => props.store.filters, () => loadData(1), { deep: true });
-onMounted(() => loadData());
+
+// ---------------------------
+// 🔹 Mounted: carga inicial
+// ---------------------------
+onMounted(() => loadData(currentPage.value));
 </script>
 
 <template>
@@ -124,19 +114,42 @@ onMounted(() => loadData());
           </td>
         </tr>
 
-        <!-- Estado: Datos dinámicos -->
+        <!-- Datos dinámicos -->
         <slot v-else></slot>
       </tbody>
     </VTable>
 
-    <!-- Separador antes de la paginación -->
+    <!-- Separador antes de paginación -->
     <VDivider thickness="2" class="divider-footer" />
 
-    <!-- Footer de paginación -->
+    <!-- Footer: Paginación -->
     <VCardActions class="justify-center footer-pagination">
-      <VPagination v-if="store.meta?.total > store.meta?.per_page" v-model="currentPage" :length="totalPages"
-        @update:model-value="changePage" rounded />
+      <VPagination
+        v-if="store.meta?.total > store.meta?.per_page"
+        v-model="currentPage"
+        :length="totalPages"
+        @update:model-value="changePage"
+        rounded
+      />
     </VCardActions>
   </VCard>
 </template>
-
+<!-- <FlexibleTable
+  :store="conditionStore"
+  method="fetch"        //   Puede ser cualquier método: fetch, fetchAll, fetchPatients 
+  value="model"         //  Nombre del array en el store 
+  :columns="['ID', 'Paciente', 'Descripción', 'Código', 'Fecha']"
+  title="No hay condiciones registradas"
+  text="Por favor agregue nuevas condiciones"
+  icon="bx-file"
+/>
+  <template #default>
+    <tr v-for="item in conditionStore.model" :key="item.id">
+      <td>{{ item.id }}</td>
+      <td>{{ item.patient?.last_name || '-' }}</td>
+      <td>{{ item.description || '-' }}</td>
+      <td>{{ item.code || '-' }}</td>
+      <td>{{ item.recorded_date }}</td>
+    </tr>
+  </template>
+</FlexibleTable> -->

@@ -73,6 +73,27 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
   />
  <VerticalNavLink
     :item="{
+      title: 'Diagnostico',
+      icon: 'bx-user-plus',
+      to: '/diagnostics/index',
+    }"
+  />
+ <VerticalNavLink
+    :item="{
+      title: 'Condition',
+      icon: 'bx-user-plus',
+      to: '/conditions/index',
+    }"
+  />
+ <VerticalNavLink
+    :item="{
+      title: 'Consentimiento',
+      icon: 'bx-user-plus',
+      to: '/consents/index',
+    }"
+  />
+ <VerticalNavLink
+    :item="{
       title: 'Practitioners',
       icon: 'bx-user-plus',
       to: '/practitioners/index',
