@@ -33,7 +33,7 @@ const router = useRouter();
 const Store = useRalimitStore();
 
 // Prefijo base para rutas (coincide con la ruta del router)
-const routePrefix = "patients";
+const routePrefix = "components";
 
 // ============================================================
 // 🚀 FUNCIONES DE NAVEGACIÓN / UTILIDAD
@@ -41,18 +41,17 @@ const routePrefix = "patients";
 
 // 🔹 Redirige a la vista de creación de un nuevo registro
 const goCreate = () => {
-  router.push({ path: `${routePrefix}-create` });
+  router.push({ name: `${routePrefix}-create` });
 };
 
-// 🔹 Redirige a la vista de detalle de un registro específico
+// Mostrar un registro
 const goShow = (id) => {
-  router.push({ path: `${routePrefix}-show/${id}`});
+  router.push({ name: 'components-show', params: { id: id } });
 };
 
-// 🔹 Redirige al formulario de edición de un registro
+// Editar un registro
 const goEdit = (id) => {
-//   router.push({ path: `${routePrefix}-edit`, params: { id } });
-   router.push({ path: `/${routePrefix}-edit/${id}` });
+  router.push({ name: 'components-edit', params: { id: id } });
 };
 
 // 🔹 Función para eliminar un registro

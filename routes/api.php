@@ -9,7 +9,7 @@ use App\Http\Controllers\API\EncounterController;
 use App\Http\Controllers\API\OrganizationController;
 use App\Http\Controllers\API\PractitionerController;
 use App\Http\Controllers\API\DiagnosticReportController;
-
+use App\Http\Controllers\ralimitController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -28,3 +28,4 @@ Route::apiResource('organizations', OrganizationController::class)
 Route::apiResource('encounters', EncounterController::class);
 Route::apiResource('diagnostics', DiagnosticReportController::class);
 Route::apiResource('conditions', ConditionController::class);
+Route::apiResource('ralimits', ralimitController::class);

@@ -72,6 +72,7 @@ export const routes = [
           { path: 'edit/:uuid', name: 'patients-edit', component: () => import('@/views/pages/patients/edit.vue') },
         ],
       },
+
       // ✅ Módulo Diagnósticos con prefijo
       {
         path: 'diagnostics',
@@ -111,14 +112,18 @@ export const routes = [
         beforeEnter: routeAuthGuard,  // <-- guard aplicado al módulo completo
         children: [
           { path: 'filter', name: 'components', component: () => import('@/pages/com_rali.vue') },
-          ],
+          { path: 'index', name: 'components-index', component: () => import('@/pages/ralimit/list.vue') },
+          { path: 'show/:id', name: 'components-show', component: () => import('@/pages/ralimit/show.vue') },
+          { path: 'create', name: 'components-create', component: () => import('@/pages/ralimit/add.vue') },
+          { path: 'edit/:id', name: 'components-edit', component: () => import('@/pages/ralimit/edit.vue') },
+        ],
       },
 
 
       // ✅ Módulo Practitioner con prefijo
       {
         path: 'practitioners',
-         beforeEnter: routeAuthGuard,  // <-- guard aplicado al módulo completo
+        beforeEnter: routeAuthGuard,  // <-- guard aplicado al módulo completo
         children: [
           { path: 'index', name: 'practitioners-index', component: () => import('@/pages/practitioner.vue') },
           { path: 'show/:uuid', name: 'practitioners-show', component: () => import('@pages/practitioners/show.vue') },
@@ -129,7 +134,7 @@ export const routes = [
       // ✅ Módulo Organizations con prefijo
       {
         path: 'organizations',
-         beforeEnter: routeAuthGuard,  // <-- guard aplicado al módulo completo
+        beforeEnter: routeAuthGuard,  // <-- guard aplicado al módulo completo
         children: [
           { path: 'index', name: 'organization-index', component: () => import('@/pages/organizations.vue') },
           { path: 'show/:uuid', name: 'organization-show', component: () => import('@pages/organizations/show.vue') },
@@ -140,7 +145,7 @@ export const routes = [
       // ✅ Módulo Encounters con prefijo
       {
         path: 'encounters',
-         beforeEnter: routeAuthGuard,  // <-- guard aplicado al módulo completo
+        beforeEnter: routeAuthGuard,  // <-- guard aplicado al módulo completo
         children: [
           { path: 'index', name: 'encounter-index', component: () => import('@/pages/encounter.vue') },
           { path: 'show/:id', name: 'encounter-show', component: () => import('@pages/encounters/show.vue') },

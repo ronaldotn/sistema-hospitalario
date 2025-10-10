@@ -4,133 +4,183 @@
 ============================================================ */
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import { useRalimitStore } from "@/stores/ralimit"; // Store para CRUD de pacientes
+import { useRalimitStore } from "@/stores/ralimit";
 
 /* ============================================================
-   ⚙️ CONFIGURACIÓN DEL RECURSO
+   ⚙️ CONFIGURACIÓN DEL COMPONENTE
 ============================================================ */
 const router = useRouter();
 const Store = useRalimitStore();
 
-// 🎯 Form reactivo usando ref
+/* ============================================================
+   🧾 FORMULARIO REACTIVO (ESTRUCTURA BASE)
+   Se definen todos los campos esperados por Laravel para
+   prevenir errores de "undefined" y facilitar el manejo del form.
+============================================================ */
 const form = ref({
-  patient_id: '',
-  identifier: '',
-  first_name: '',
-  last_name: '',
-  date_of_birth: '',
-  gender: '',
-  phone: '',
-  email: '',
-  address: ''
+  identifier: "",
+  first_name: "",
+  last_name: "",
+  date_of_birth: "",
+  gender: "",
+  phone: "",
+  email: "",
+  address: "",
 });
 
-// 💥 Objeto para errores de validación
+/* ============================================================
+   🚨 ESTADOS Y ERRORES LOCALES
+============================================================ */
 const errors = ref({});
+const isLoading = ref(false);
+const loading = ref(false);
+const error = ref(false);
+const routePrefix = "components";
 
 /* ============================================================
-   🔹 Función para enviar el formulario
+   💾 FUNCIÓN: CREAR REGISTRO
 ============================================================ */
 const submitForm = async () => {
-  // 🔹 Limpiar errores previos
-  Object.keys(errors).forEach(key => errors[key] = '');
+  errors.value = {};
+  isLoading.value = true;
 
   try {
-    const response = await Store.create(form);
-    if (response) router.push({ path: '/patients-index' });
-  } catch (err) {
-    // 🔹 Captura errores de validación (HTTP 422)
-    if (err.response?.status === 422) {
-      Object.assign(errors, err.response.data.errors || {});
-    }
-  }
-};
+    const response = await Store.create(form.value);
 
-/* ============================================================
-   🔹 Función para resetear el formulario
-============================================================ */
-const resetForm = () => {
-  Object.keys(form).forEach(key => form[key] = '');
-  Object.keys(errors).forEach(key => errors[key] = '');
+    if (response && (response.status === 200 || response.status === 201)) {
+      router.push({ name: `${routePrefix}-index` });
+    }
+  } catch (err) {
+    console.error("❌ Error creando registro:", err);
+    if (err.response?.status === 422) {
+      errors.value = err.response.data.errors || {};
+    } else {
+      error.value = true;
+    }
+  } finally {
+    isLoading.value = false;
+  }
 };
 </script>
 
 <template>
-  <!-- ============================================================
-       Cabecera
-  ============================================================ -->
-  <VCard class="mb-4 elevation-2 rounded-lg">
-    <VCardTitle class="d-flex justify-space-between align-center px-6 py-4">
-      <h2 class="text-h5 font-weight-bold text-primary">Crear Paciente</h2>
-      <VBtn prepend-icon="bx-arrow-back" color="secondary" variant="tonal"
-        @click="router.push({ path: '/patients-index' })">
-        Volver
-      </VBtn>
-    </VCardTitle>
-  </VCard>
+  <StatusMessage
+    :loading="loading"
+    :error="error"
+    title="Error al crear registro"
+    text="No se pudo completar la creación del registro"
+    icon="bx-user-x"
+  >
+    <!-- ============================================================
+         🧭 CABECERA DEL MÓDULO
+    ============================================================ -->
+    <VCard class="mb-4 elevation-2 rounded-lg">
+      <VCardTitle class="d-flex justify-space-between align-center px-6 py-4">
+        <h2 class="text-h5 font-weight-bold text-primary">Crear Paciente</h2>
+        <VBtn
+          prepend-icon="bx-arrow-back"
+          color="secondary"
+          variant="tonal"
+          @click="router.push({ name: `${routePrefix}-index` })"
+        >
+          Volver
+        </VBtn>
+      </VCardTitle>
+    </VCard>
 
-  <!-- ============================================================
-       Formulario
-  ============================================================ -->
-  <VCard class="elevation-1 rounded-lg">
-    <VCardText>
-      <VForm @submit.prevent="submitForm">
-        <VRow>
-          <!-- Identifier -->
-          <VCol cols="12">
-            <VTextField v-model="form.identifier" label="Identifier" placeholder="CI, pasaporte, seguro"
-              required :error-messages="errors.identifier" />
-          </VCol>
+    <!-- ============================================================
+         📝 FORMULARIO PRINCIPAL
+    ============================================================ -->
+    <VCard class="elevation-1 rounded-lg">
+      <VCardText>
+        <VForm @submit.prevent="submitForm">
+          <VRow>
+            <VCol cols="12">
+              <VTextField
+                v-model="form.identifier"
+                label="Identifier"
+                placeholder="CI, pasaporte, seguro"
+                required
+                :error-messages="errors.identifier"
+              />
+            </VCol>
 
-          <!-- First Name -->
-          <VCol cols="12" md="6">
-            <VTextField v-model="form.first_name" label="First Name" placeholder="John" required
-              :error-messages="errors.first_name" />
-          </VCol>
+            <VCol cols="12" md="6">
+              <VTextField
+                v-model="form.first_name"
+                label="First Name"
+                required
+                :error-messages="errors.first_name"
+              />
+            </VCol>
 
-          <!-- Last Name -->
-          <VCol cols="12" md="6">
-            <VTextField v-model="form.last_name" label="Last Name" placeholder="Doe" required
-              :error-messages="errors.last_name" />
-          </VCol>
+            <VCol cols="12" md="6">
+              <VTextField
+                v-model="form.last_name"
+                label="Last Name"
+                required
+                :error-messages="errors.last_name"
+              />
+            </VCol>
 
-          <!-- Date of Birth -->
-          <VCol cols="12" md="6">
-            <VTextField v-model="form.date_of_birth" label="Date of Birth" type="date"
-              :error-messages="errors.date_of_birth" />
-          </VCol>
+            <VCol cols="12" md="6">
+              <VTextField
+                v-model="form.date_of_birth"
+                label="Date of Birth"
+                type="date"
+                :error-messages="errors.date_of_birth"
+              />
+            </VCol>
 
-          <!-- Gender -->
-          <VCol cols="12" md="6">
-            <VSelect v-model="form.gender" :items="['male', 'female', 'other', 'unknown']"
-              label="Gender" placeholder="Select gender" :error-messages="errors.gender" />
-          </VCol>
+            <VCol cols="12" md="6">
+              <VSelect
+                v-model="form.gender"
+                :items="['male', 'female', 'other', 'unknown']"
+                label="Gender"
+                :error-messages="errors.gender"
+              />
+            </VCol>
 
-          <!-- Phone -->
-          <VCol cols="12" md="6">
-            <VTextField v-model="form.phone" label="Phone" placeholder="+591 7 123 4567"
-              :error-messages="errors.phone" />
-          </VCol>
+            <VCol cols="12" md="6">
+              <VTextField
+                v-model="form.phone"
+                label="Phone"
+                placeholder="+591 7 123 4567"
+                :error-messages="errors.phone"
+              />
+            </VCol>
 
-          <!-- Email -->
-          <VCol cols="12" md="6">
-            <VTextField v-model="form.email" label="Email" type="email" placeholder="example@mail.com"
-              :error-messages="errors.email" />
-          </VCol>
+            <VCol cols="12" md="6">
+              <VTextField
+                v-model="form.email"
+                label="Email"
+                type="email"
+                placeholder="example@mail.com"
+                :error-messages="errors.email"
+              />
+            </VCol>
 
-          <!-- Address -->
-          <VCol cols="12">
-            <VTextField v-model="form.address" label="Address" placeholder="Street, city, country" rows="2"
-              multiline :error-messages="errors.address" />
-          </VCol>
+            <VCol cols="12">
+              <VTextField
+                v-model="form.address"
+                label="Address"
+                placeholder="Street, city, country"
+                rows="2"
+                :error-messages="errors.address"
+              />
+            </VCol>
 
-          <!-- Botones -->
-          <VCol cols="12" class="d-flex gap-4">
-            <VBtn type="submit" color="primary">Crear</VBtn>
-            <VBtn type="reset" color="secondary" variant="tonal" @click="resetForm">Reset</VBtn>
-          </VCol>
-        </VRow>
-      </VForm>
-    </VCardText>
-  </VCard>
+            <VCol cols="12" class="d-flex gap-4">
+              <VBtn type="submit" color="primary" :loading="isLoading">
+                Crear
+              </VBtn>
+              <VBtn type="reset" color="secondary" variant="tonal">
+                Reset
+              </VBtn>
+            </VCol>
+          </VRow>
+        </VForm>
+      </VCardText>
+    </VCard>
+  </StatusMessage>
 </template>

@@ -34,6 +34,12 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
         to: '/components/filter',
       }"
     />
+    <VerticalNavLink
+      :item="{
+        title: 'table',
+        to: '/components/index',
+      }"
+    />
   </VerticalNavGroup>
 
   <!-- 👉 Apps & Pages -->
