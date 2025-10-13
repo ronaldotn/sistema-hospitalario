@@ -223,28 +223,128 @@ class PatientController extends BaseController
         ], 200);
     }
     /**
- * 🔹 Obtener métricas generales de pacientes
- */
-public function metrics(): JsonResponse
-{
-    // 🔹 Total de pacientes
-    $totalPatients = Patient::count();
+     * 🔹 Obtener métricas generales de pacientes
+     */
+    public function metrics(): JsonResponse
+    {
+        // 🔹 Total de pacientes
+        $totalPatients = Patient::count();
 
-    // 🔹 Pacientes que tienen al menos un encounter (consultas/hospitalizaciones)
-    $patientsWithEncounters = Patient::has('encounters')->count();
+        // 🔹 Pacientes que tienen al menos un encounter (consultas/hospitalizaciones)
+        $patientsWithEncounters = Patient::has('encounters')->count();
 
-    // 🔹 Pacientes que tienen alguna condición registrada
-    $patientsWithConditions = Patient::has('conditions')->count();
+        // 🔹 Pacientes que tienen alguna condición registrada
+        $patientsWithConditions = Patient::has('conditions')->count();
 
-    // 🔹 Pacientes con observaciones (ej. signos vitales o laboratorios)
-    $patientsWithObservations = Patient::has('observations')->count();
+        // 🔹 Pacientes con observaciones (ej. signos vitales o laboratorios)
+        $patientsWithObservations = Patient::has('observations')->count();
 
-    return $this->sendResponse([
-        'totalPatients'            => $totalPatients,
-        'patientsWithEncounters'   => $patientsWithEncounters,
-        'patientsWithConditions'   => $patientsWithConditions,
-        'patientsWithObservations' => $patientsWithObservations,
-    ], 'Métricas de pacientes obtenidas');
-}
+        return $this->sendResponse([
+            'totalPatients'            => $totalPatients,
+            'patientsWithEncounters'   => $patientsWithEncounters,
+            'patientsWithConditions'   => $patientsWithConditions,
+            'patientsWithObservations' => $patientsWithObservations,
+        ], 'Métricas de pacientes obtenidas');
+    }
+    /**
+     * 🔹 Detectar duplicados potenciales
+     * Endpoint: GET /api/patients/duplicates
+     * Query Params:
+     * - search (opcional): nombre, apellido o documento para filtrar
+     */
+    public function duplicates(Request $request): JsonResponse
+    {
+        $search = trim($request->input('search', ''));
 
+        // Base query
+        $query = Patient::query();
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'LIKE', "%{$search}%")
+                    ->orWhere('last_name', 'LIKE', "%{$search}%")
+                    ->orWhere('identifier', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // Traemos los pacientes relevantes (limit opcional, paginación si quieres)
+        $patients = $query->orderBy('created_at', 'desc')->get();
+
+        // Lista para almacenar duplicados
+        $duplicates = collect();
+
+        // Eloquent Matching probabilístico simplificado
+        $patients->each(function ($p, $i) use ($patients, $duplicates) {
+            $patients->slice($i + 1)->each(function ($other) use ($p, $duplicates) {
+                $score = 0;
+
+                // Documento exacto
+                if ($p->identifier && $other->identifier && $p->identifier === $other->identifier) {
+                    $score += 50;
+                }
+
+                // Nombre + apellido similar
+                if ($p->first_name && $p->last_name && $other->first_name && $other->last_name) {
+                    similar_text(strtolower($p->first_name), strtolower($other->first_name), $percentFirst);
+                    similar_text(strtolower($p->last_name), strtolower($other->last_name), $percentLast);
+                    $score += (($percentFirst + $percentLast) / 2) * 0.5; // Max 50
+                }
+
+                // Fecha de nacimiento exacta
+                if ($p->date_of_birth && $p->date_of_birth === $other->date_of_birth) {
+                    $score += 20;
+                }
+
+                if ($score >= 50) { // Threshold configurable
+                    $duplicates->push([
+                        'patient_a' => $p,
+                        'patient_b' => $other,
+                        'score' => round($score, 2)
+                    ]);
+                }
+            });
+        });
+
+        return $this->sendResponse(
+            $duplicates->sortByDesc('score')->values(),
+            'Duplicados potenciales encontrados'
+        );
+    }
+
+    /**
+     * 🔹 Fusionar pacientes duplicados
+     * Endpoint: POST /api/patients/merge
+     * Params: master_id, merge_ids[]
+     */
+    public function mergeDuplicates(Request $request): JsonResponse
+    {
+        $request->validate([
+            'master_id' => 'required|exists:patients,id',
+            'merge_ids' => 'required|array|min:1',
+            'merge_ids.*' => 'exists:patients,id',
+        ]);
+
+        $master = Patient::findOrFail($request->master_id);
+        $toMerge = Patient::whereIn('id', $request->merge_ids)->get();
+
+        foreach ($toMerge as $patient) {
+            // Ejemplo simple: si master tiene campo vacío, toma del duplicado
+            foreach ($patient->getAttributes() as $key => $value) {
+                if (!$master->$key && $value) {
+                    $master->$key = $value;
+                }
+            }
+
+            // Opcional: transferir relaciones (encounters, condiciones, observaciones)
+            // $patient->encounters()->update(['patient_id' => $master->id]);
+            // $patient->conditions()->update(['patient_id' => $master->id]);
+            // $patient->observations()->update(['patient_id' => $master->id]);
+
+            $patient->delete();
+        }
+
+        $master->save();
+
+        return $this->sendResponse($master, 'Pacientes fusionados correctamente');
+    }
 }
