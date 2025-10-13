@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\PatientController;
+use App\Http\Controllers\API\PractitionerController;
 
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -14,16 +15,11 @@ Route::middleware('auth:sanctum')->group(function () {
     //ralimit, franz
 });
 // Listar todos los pacientes
-Route::get('/patients', [PatientController::class, 'index']);
 
-// Mostrar un paciente específico
-Route::get('/patients/{uuid}', [PatientController::class, 'show']);
-
-// Crear un nuevo paciente
-Route::post('/patients', [PatientController::class, 'store']);
-
-// Actualizar un paciente existente
-Route::put('/patients/{uuid}', [PatientController::class, 'update']);
-
-// Eliminar un paciente
-Route::delete('/patients/{uuid}', [PatientController::class, 'destroy']);
+Route::get('/practitioners', [PractitionerController::class, 'index']);
+Route::post('/practitioners', [PractitionerController::class, 'store']);
+// La URL final será: /api/practitioners/lookup
+Route::get('practitioners/lookup', [PractitionerController::class, 'lookup'])
+    ->name('practitioner.lookup'); // Alias claro, profesional y en CamelCase.
+Route::post('practitioners/check', [PractitionerController::class, 'checkUnique'])
+    ->name('practitioner.check');
