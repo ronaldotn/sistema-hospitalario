@@ -15,6 +15,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 // Listar todos los pacientes
 Route::get('/patients', [PatientController::class, 'index']);
+Route::get('/metrics', [PatientController::class, 'metrics']); // Métricas generales
 
 // Mostrar un paciente específico
 Route::get('/patients/{uuid}', [PatientController::class, 'show']);
