@@ -61,30 +61,17 @@ export const routes = [
         component: () => import('@/pages/form-layouts.vue'),
         beforeEnter: routeAuthGuard,
       },
-      // ✅ ejmplo ralimit Módulo Patients 
-    
-   
-  
-          {
-            path: 'patients-index', 
-            component: () => import('@/pages/ralimit/list.vue'),
-                 beforeEnter: routeAuthGuard,  // <-- guard aplicado al módulo completo
-          },
-          {
-            path: 'patients-show/:id', 
-            component: () => import('@/pages/ralimit/show.vue'),
-                 beforeEnter: routeAuthGuard,  // <-- guard aplicado al módulo completo
-          },
-          {
-            path: 'patients-create',
-            component: () => import('@/pages/ralimit/add.vue'),
-                 beforeEnter: routeAuthGuard,  // <-- guard aplicado al módulo completo
-          },
-          {
-            path: 'patients-edit/:id',
-            component: () => import('@/pages/ralimit/edit.vue'),
-                 beforeEnter: routeAuthGuard,  // <-- guard aplicado al módulo completo
-          },
+      // ✅ Módulo Patients con prefijo
+      {
+        path: 'patients',
+        beforeEnter: routeAuthGuard,  // <-- guard aplicado al módulo completo
+        children: [
+          { path: 'index', name: 'patients-index', component: () => import('@/pages/receptions/patient.vue') },
+          { path: 'show/:uuid', name: 'patients-show', component: () => import('@/views/pages/patients/show.vue') },
+          { path: 'create', name: 'patients-create', component: () => import('@/views/pages/patients/create.vue') },
+          { path: 'edit/:uuid', name: 'patients-edit', component: () => import('@/views/pages/patients/edit.vue') },
+        ],
+      },
 
     ],
   },

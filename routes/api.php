@@ -13,17 +13,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     //ralimit, franz
 });
-// Listar todos los pacientes
+// =====================
+// Pacientes existentes
+// =====================
 Route::get('/patients', [PatientController::class, 'index']);
-
-// Mostrar un paciente específico
+Route::get('/metrics', [PatientController::class, 'metrics']);
 Route::get('/patients/{uuid}', [PatientController::class, 'show']);
-
-// Crear un nuevo paciente
 Route::post('/patients', [PatientController::class, 'store']);
-
-// Actualizar un paciente existente
 Route::put('/patients/{uuid}', [PatientController::class, 'update']);
-
-// Eliminar un paciente
 Route::delete('/patients/{uuid}', [PatientController::class, 'destroy']);
+
+// =====================
+// Duplicados
+// =====================
+
+// 🔹 Detectar duplicados potenciales
+Route::get('/patients/duplicates', [PatientController::class, 'duplicates']);
+
+// 🔹 Fusionar duplicados (solo admin)
+Route::post('/patients/merge', [PatientController::class, 'mergeDuplicates']);
