@@ -1,14 +1,15 @@
 <script setup>
 // 📦 Imports
-import { ref, reactive } from "vue";
-import { useRouter } from "vue-router";
+import { ref, reactive, watch, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import { usePractitionerStore } from "@/stores/practitioner";
 
 const router = useRouter();
+const route = useRoute();
 const practitionerStore = usePractitionerStore();
 
-// 🔹 Estado del formulario
-const form = reactive({
+// 🔹 Estado del formulario (reactive para binding)
+const form = ref({
   first_name: "",
   last_name: "",
   identifier: "",
@@ -21,56 +22,87 @@ const form = reactive({
 // 🔹 Errores de validación
 const errors = ref({});
 
-// 🔹 Catálogo de especialidades
-const specialties = ref([
-  "Cardiología", "Dermatología", "Pediatría", "Medicina General", "Ginecología"
-]);
+// 🔹 Lista de especialidades (para autocomplete)
+const specialties = ref([]);
 
-// 🔹 Reset form
+// 🔹 Edit mode: si hay id en params
+const editId = route.params.id || null;
+
+// =======================
+// 🔹 Funciones
+// =======================
+
+// Reset form
 const resetForm = () => {
-  Object.keys(form).forEach(key => {
-    if (key === "active") {
-      form[key] = 1;
-    } else {
-      form[key] = "";
-    }
+  Object.keys(form).forEach((key) => {
+    form[key] = key === "active" ? 1 : "";
   });
   errors.value = {};
 };
 
-// 🔹 Función al enviar
+// Fetch de especialidades para autocomplete
+const fetchSpecialties = async () => {
+  specialties.value = practitionerStore.specialties; // o lookup si quieres live
+};
+
+// Validación en tiempo real (identifier/email)
+const validateUnique = async (field) => {
+  if (!form[field]) return;
+  const exists = await practitionerStore.checkUnique(field, form[field]);
+  if (exists) {
+    errors.value[field] = `El ${field} ya está registrado.`;
+  } else {
+    errors.value[field] = null;
+  }
+};
+
+// Submit form (create/update)
 const submitForm = async () => {
   errors.value = {};
   try {
-    const response = await practitionerStore.create(form);
-    if (response) {
-      router.push({ name: "practitioners-index" });
+    if (editId) {
+      await practitionerStore.update(editId, form);
+    } else {
+      await practitionerStore.create(form);
     }
+    router.push({ name: "practitioners-index" });
   } catch (err) {
     if (err.response?.status === 422) {
       errors.value = err.response.data.errors || {};
     }
   }
 };
+
+// Load professional data if edit mode
+const loadProfessional = async () => {
+  if (!editId) return;
+  const data = await practitionerStore.show(editId);
+  if (data) Object.assign(form, data);
+};
+
+// =======================
+// 🔹 Lifecycle
+// =======================
+onMounted(async () => {
+  await fetchSpecialties();
+  await loadProfessional();
+});
 </script>
 
 <template>
-  <!-- 🔹 Encabezado -->
+  <!-- 🔹 Card Formulario -->
   <VCard class="mb-4 elevation-2 rounded-lg">
     <VCardTitle class="d-flex justify-space-between align-center px-6 py-4">
-      <h2 class="text-h5 font-weight-bold text-primary">Registrar Profesional</h2>
+      <h2 class="text-h5 font-weight-bold text-primary">
+        {{ editId ? "Editar Profesional" : "Registrar Profesional" }}
+      </h2>
       <VBtn prepend-icon="bx-arrow-back" color="secondary" variant="tonal" @click="router.push({ name: 'practitioners-index' })">
         Volver
       </VBtn>
     </VCardTitle>
-  </VCard>
-
-  <!-- 🔹 Formulario -->
-  <VCard class="elevation-1 rounded-lg">
     <VCardText>
       <VForm @submit.prevent="submitForm">
         <VRow :gap="4">
-
           <!-- Nombre -->
           <VCol cols="12" md="6">
             <VTextField
@@ -82,7 +114,6 @@ const submitForm = async () => {
               required
             />
           </VCol>
-
           <!-- Apellidos -->
           <VCol cols="12" md="6">
             <VTextField
@@ -94,8 +125,7 @@ const submitForm = async () => {
               required
             />
           </VCol>
-
-          <!-- Nro de colegiado -->
+          <!-- Nro Colegiado -->
           <VCol cols="12" md="6">
             <VTextField
               v-model="form.identifier"
@@ -104,9 +134,9 @@ const submitForm = async () => {
               :error="!!errors.identifier"
               :error-messages="errors.identifier"
               required
+              @blur="validateUnique('identifier')"
             />
           </VCol>
-
           <!-- Especialidad -->
           <VCol cols="12" md="6">
             <VAutocomplete
@@ -119,7 +149,6 @@ const submitForm = async () => {
               required
             />
           </VCol>
-
           <!-- Email -->
           <VCol cols="12" md="6">
             <VTextField
@@ -129,9 +158,9 @@ const submitForm = async () => {
               prepend-inner-icon="bx-envelope"
               :error="!!errors.email"
               :error-messages="errors.email"
+              @blur="validateUnique('email')"
             />
           </VCol>
-
           <!-- Teléfono -->
           <VCol cols="12" md="6">
             <VTextField
@@ -142,7 +171,6 @@ const submitForm = async () => {
               :error-messages="errors.phone"
             />
           </VCol>
-
           <!-- Estado -->
           <VCol cols="12" md="6">
             <VSelect
@@ -155,17 +183,15 @@ const submitForm = async () => {
               :error-messages="errors.active"
             />
           </VCol>
-
           <!-- Botones -->
           <VCol cols="12" class="d-flex justify-end gap-3 mt-4">
             <VBtn color="secondary" variant="tonal" @click="resetForm">
               Reset
             </VBtn>
             <VBtn type="submit" color="primary" prepend-icon="bx-save">
-              Guardar
+              {{ editId ? "Actualizar" : "Guardar" }}
             </VBtn>
           </VCol>
-
         </VRow>
       </VForm>
     </VCardText>

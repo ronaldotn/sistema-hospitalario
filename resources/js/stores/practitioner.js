@@ -1,49 +1,36 @@
-// 📦 Importaciones necesarias
+// 🏥 Store de Practitioners – Pinia
 import { ref } from "vue";
 import { defineStore } from "pinia";
 import Axios from "@/composables/Axios"; // Axios con baseURL y token
 import { WarningToast, SuccessToast } from "@/composables/Toast";
-// ⭐ NUEVO: Importar el Store de Carga Global ⭐
-import { useAppStore } from "@/stores/load"; // Léase: "iús app stor"-Usar almacén de aplicación
+import { useAppStore } from "@/stores/load"; // Carga global
 
-// 🏥 Store de Practitioners – Pinia
 export const usePractitionerStore = defineStore("practitioner", () => {
-    // 🔹 0️⃣ Estado general
+    // 🔹 Estado general
     const model = ref([]);
     const current = ref(null);
-    // MANTENEMOS: 'loading' SÓLO para la carga de la tabla (fetch)
-    const loading = ref(false);
-    const lookupList = ref([]); // 👈 ¡NUEVA VARIABLE PARA LISTAS AUXILIARES!
-    // 🔹 1️⃣ Información de paginación (Laravel paginate)
+    const loading = ref(false);       // Carga local (tabla)
+    const lookupList = ref([]);       // Lookup rápido
     const meta = ref({});
     const links = ref([]);
-    // 🔹 Catálogo de especialidades centralizado
+
+    // Catálogo de especialidades
     const specialties = ref([
-        "Oftalmología",
-        "Radiología",
-        "Psiquiatría",
-        "Endocrinología",
-        "Dermatología",
-        "Gastroenterología",
-        "Laboratorio Clínico",
-        "Cardiología",
-        "Pediatría",
-        "Neurología",
-        "Anestesiología"
+        "Oftalmología", "Radiología", "Psiquiatría",
+        "Endocrinología", "Dermatología", "Gastroenterología",
+        "Laboratorio Clínico", "Cardiología", "Pediatría", "Neurología", "Anestesiología"
     ]);
 
-    // ⭐ NUEVO: Inicializar el App Store Global ⭐
+    // Store de carga global
     const appStore = useAppStore();
 
-    // ===============================
-    // 🔹 3️⃣ Función – Obtener lista (Usa Carga LOCAL)
-    // ===============================
+    // =========================
+    // 🔹 Fetch paginado con filtros
+    // =========================
     const fetch = async (params = {}) => {
-        // 💡 Usa loading.value LOCAL para la tabla
         loading.value = true;
         try {
             const { data } = await Axios.get("practitioners", { params });
-
             model.value = data.result?.data || [];
             meta.value = {
                 current_page: data.result?.current_page,
@@ -55,59 +42,64 @@ export const usePractitionerStore = defineStore("practitioner", () => {
         } catch (err) {
             WarningToast(err.response?.data?.message || err.message);
         } finally {
-            // 💡 Usa loading.value LOCAL
             loading.value = false;
         }
     };
 
-    // 🔹 4️⃣ Obtener un profesional específico (show) – Usa Carga GLOBAL
+    // =========================
+    // 🔹 Mostrar un profesional específico
+    // =========================
     const show = async (uuid) => {
         if (!uuid) return null;
-        appStore.startLoading(); // ⚡ Usa carga GLOBAL (Header)
+        appStore.startLoading();
         try {
-            const { data } = await Axios.get(`practitioner/${uuid}`);
+            const { data } = await Axios.get(`practitioners/${uuid}`);
             current.value = data.result || null;
             return current.value;
         } catch (err) {
             WarningToast(err.response?.data?.message || err.message);
             return null;
         } finally {
-            appStore.stopLoading(); // ⚡ Detiene carga GLOBAL
+            appStore.stopLoading();
         }
     };
-    const lookup = async () => { // Ya no necesita el ID
+
+    // =========================
+    // 🔹 Lookup rápido
+    // =========================
+    const lookup = async () => {
         try {
-            // ✅ CORRECCIÓN 1: La URL es limpia y no lleva el ID.
             const { data } = await Axios.get("practitioners/lookup");
             lookupList.value = data.result;
-            return data.code || null;
+            return data.result || [];
         } catch (err) {
-
-            return null;
-
+            WarningToast(err.response?.data?.message || err.message);
+            return [];
         }
     };
-    // 🔹 Verificar en tiempo real si un campo ya existe
+
+    // =========================
+    // 🔹 Verificar campo único en tiempo real
+    // =========================
     const checkUnique = async (field, value) => {
         if (!value) return false;
-
         try {
             const { data } = await Axios.post("practitioners/check", { field, value });
             return data.result.exists;
         } catch (err) {
-
             return false;
         }
     };
 
-    // 🔹 5️⃣ Crear profesional (create) – Usa Carga GLOBAL
+    // =========================
+    // 🔹 Crear profesional
+    // =========================
     const create = async (payload) => {
-        appStore.startLoading(); // ⚡ Usa carga GLOBAL (Header)
-
+        appStore.startLoading();
         try {
             const { data } = await Axios.post("practitioners", payload);
             SuccessToast(data.message || "Profesional creado correctamente");
-            return data;
+            return data.result || null;
         } catch (err) {
             if (err.response?.status === 422) {
                 WarningToast("Revisa los campos obligatorios");
@@ -119,25 +111,50 @@ export const usePractitionerStore = defineStore("practitioner", () => {
             }
             return null;
         } finally {
-            appStore.stopLoading(); // ⚡ Detiene carga GLOBAL
+            appStore.stopLoading();
         }
     };
 
-    // ==============================
-    // 🔹 6️⃣ Exportar estados y funciones
-    // ==============================
+    // =========================
+    // 🔹 Actualizar profesional
+    // =========================
+    const update = async (uuid, payload) => {
+        appStore.startLoading();
+        try {
+            const { data } = await Axios.put(`practitioners/${uuid}`, payload);
+            SuccessToast(data.message || "Profesional actualizado correctamente");
+            return data.result || null;
+        } catch (err) {
+            if (err.response?.status === 422) {
+                WarningToast("Revisa los campos obligatorios");
+                throw err;
+            } else if (err.response?.status === 409) {
+                WarningToast(err.response.data.message);
+            } else {
+                WarningToast(err.response?.data?.message || err.message);
+            }
+            return null;
+        } finally {
+            appStore.stopLoading();
+        }
+    };
+
+    // =========================
+    // 🔹 Exportar estados y funciones
+    // =========================
     return {
         model,
         current,
         loading,
+        lookupList,
         meta,
         links,
-        lookupList,
-        specialties, // 👈 aquí la añadimos,
+        specialties,
         fetch,
         show,
-        create,
         lookup,
         checkUnique,
+        create,
+        update,
     };
 });

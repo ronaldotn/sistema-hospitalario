@@ -67,9 +67,9 @@ export const routes = [
         beforeEnter: routeAuthGuard,  // <-- guard aplicado al módulo completo
         children: [
           { path: 'index', name: 'practitioners-index', component: () => import('@/pages/practitioner.vue') },
-          { path: 'show/:uuid', name: 'practitioners-show', component: () => import('@/views/pages/practitioners/show.vue') },
+          { path: 'show/:id', name: 'practitioners-show', component: () => import('@/views/pages/practitioners/show.vue') },
           { path: 'create', name: 'practitioners-create', component: () => import('@/views/pages/practitioners/create.vue') },
-          { path: 'edit/:uuid', name: 'practitioners-edit', component: () => import('@/views/pages/practitioners/edit.vue') },
+          { path: 'edit/:id', name: 'practitioners-edit', component: () => import('@/views/pages/practitioners/edit.vue') },
         ],
       },
 

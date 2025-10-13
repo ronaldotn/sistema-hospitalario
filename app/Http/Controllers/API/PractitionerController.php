@@ -134,13 +134,55 @@ class PractitionerController extends BaseController
         //
     }
 
+
     /**
-     * Update the specified resource in storage.
+     * Actualización completa (PUT) o parcial (PATCH)
      */
-    public function update(Request $request, Practitioner $practitioner)
+    public function update(Request $request, Practitioner $practitioner): JsonResponse
     {
-        //
+        // Validación básica según PATCH o PUT
+        $rules = [
+            'identifier' => 'sometimes|required|string|unique:practitioners,identifier,' . $practitioner->id,
+            'first_name' => 'sometimes|required|string|max:255',
+            'last_name'  => 'sometimes|required|string|max:255',
+            'specialty'  => 'sometimes|required|string|max:255',
+            'email'      => 'sometimes|nullable|email|unique:practitioners,email,' . $practitioner->id,
+            'phone'      => 'sometimes|nullable|string|max:20',
+            'active'     => 'sometimes|required|boolean',
+        ];
+
+        $validated = $request->validate($rules);
+
+        // Auditoría campo por campo
+        $changes = [];
+        foreach ($validated as $key => $value) {
+            if ($practitioner->{$key} != $value) {
+                $changes[$key] = [
+                    'old' => $practitioner->{$key},
+                    'new' => $value
+                ];
+            }
+        }
+
+        if ($changes) {
+            $practitioner->update($validated);
+
+            AuditEvents::create([
+                'user_id'   => Auth::id(),
+                'action'    => 'update',
+                'resource'  => 'Practitioner/' . $practitioner->id,
+                'timestamp' => now(),
+                'details'   => [
+                    'changed_by' => Auth::user()->name ?? 'System',
+                    'changes'    => $changes,
+                    'timestamp'  => now()->toIso8601String(),
+                ],
+            ]);
+        }
+
+        return $this->sendResponse($practitioner, 'Profesional actualizado correctamente', 200);
     }
+
 
     /**
      * Remove the specified resource from storage.

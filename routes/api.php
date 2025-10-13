@@ -23,3 +23,5 @@ Route::get('practitioners/lookup', [PractitionerController::class, 'lookup'])
     ->name('practitioner.lookup'); // Alias claro, profesional y en CamelCase.
 Route::post('practitioners/check', [PractitionerController::class, 'checkUnique'])
     ->name('practitioner.check');
+Route::put('/practitioners/{id}', [PractitionerController::class, 'update']);
+Route::patch('/practitioners/{id}', [PractitionerController::class, 'updatePartial']);

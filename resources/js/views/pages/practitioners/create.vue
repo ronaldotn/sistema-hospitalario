@@ -45,7 +45,7 @@ watch(
     verifying.value = true;
     identifierTitle.value = "Verificando...";
 
-    debounceTimeout = setTimeout(() => validarColegiado(val), 2000);
+    debounceTimeout = setTimeout(() => validarColegiado(val), 2000);// esto  investigar a profundidad,sagets
   }
 );
 
