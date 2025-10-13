@@ -9,14 +9,14 @@ import { useAppStore } from "@/stores/load"; // Léase: "iús app stor"-Usar alm
 // 🏥 Store de Practitioners – Pinia
 export const usePractitionerStore = defineStore("practitioner", () => {
     // 🔹 0️⃣ Estado general
-    const model = ref([]); 
-    const current = ref(null); 
+    const model = ref([]);
+    const current = ref(null);
     // MANTENEMOS: 'loading' SÓLO para la carga de la tabla (fetch)
-    const loading = ref(false); 
-
+    const loading = ref(false);
+    const lookupList = ref([]); // 👈 ¡NUEVA VARIABLE PARA LISTAS AUXILIARES!
     // 🔹 1️⃣ Información de paginación (Laravel paginate)
-    const meta = ref({}); 
-    const links = ref([]); 
+    const meta = ref({});
+    const links = ref([]);
 
     // ⭐ NUEVO: Inicializar el App Store Global ⭐
     const appStore = useAppStore();
@@ -61,7 +61,19 @@ export const usePractitionerStore = defineStore("practitioner", () => {
             appStore.stopLoading(); // ⚡ Detiene carga GLOBAL
         }
     };
+    const lookup = async () => { // Ya no necesita el ID
+        try {
+            // ✅ CORRECCIÓN 1: La URL es limpia y no lleva el ID.
+            const {data} = await Axios.get("practitioners/lookup");
+            lookupList.value = data.result;
+            return data.code || null;
+        } catch (err) {
+            // _handleError(err);
+               console.log(err);
+            return null;
 
+        }
+    };
     // 🔹 5️⃣ Crear profesional (create) – Usa Carga GLOBAL
     const create = async (payload) => {
         appStore.startLoading(); // ⚡ Usa carga GLOBAL (Header)
@@ -94,8 +106,10 @@ export const usePractitionerStore = defineStore("practitioner", () => {
         loading,
         meta,
         links,
+        lookupList,
         fetch,
         show,
         create,
+        lookup,
     };
 });

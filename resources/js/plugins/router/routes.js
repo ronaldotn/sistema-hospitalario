@@ -63,6 +63,17 @@ export const routes = [
       },
       // ✅ Módulo Patients con prefijo
       {
+        path: 'receptions',
+        beforeEnter: routeAuthGuard,  // <-- guard aplicado al módulo completo
+        children: [
+          { path: 'index', name: 'receptions-index', component: () => import('@/pages/receptions/patient.vue') },
+        //   { path: 'show/:uuid', name: 'receptions-show', component: () => import('@/views/pages/receptions/show.vue') },
+        //   { path: 'create', name: 'receptions-create', component: () => import('@/views/pages/receptions/create.vue') },
+        //   { path: 'edit/:uuid', name: 'receptions-edit', component: () => import('@/views/pages/receptions/edit.vue') },
+         ],
+      },
+      // ✅ Módulo Patients con prefijo
+      {
         path: 'patients',
         beforeEnter: routeAuthGuard,  // <-- guard aplicado al módulo completo
         children: [
@@ -111,7 +122,8 @@ export const routes = [
         path: 'components',
         beforeEnter: routeAuthGuard,  // <-- guard aplicado al módulo completo
         children: [
-          { path: 'filter', name: 'components', component: () => import('@/pages/com_rali.vue') },
+          { path: 'filter', name: 'components-filter', component: () => import('@/pages/com_rali.vue') },
+          { path: 'dept', name: 'components', component: () => import('@/pages/ralimit/dept.vue') },
           { path: 'index', name: 'components-index', component: () => import('@/pages/ralimit/list.vue') },
           { path: 'show/:id', name: 'components-show', component: () => import('@/pages/ralimit/show.vue') },
           { path: 'create', name: 'components-create', component: () => import('@/pages/ralimit/add.vue') },

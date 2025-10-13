@@ -21,6 +21,20 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
       }"
     />
   </VerticalNavGroup>
+  <!-- 👉 Recepcionista -->
+  <VerticalNavGroup
+    :item="{
+      title: 'Recepcionista',
+      icon: 'bx-home-smile',
+    }"
+  >
+    <VerticalNavLink
+      :item="{
+        title: 'Analytics',
+        to: '/receptions/index',
+      }"
+    />
+  </VerticalNavGroup>
   <!-- 👉 componets RALIMIT -->
   <VerticalNavGroup
     :item="{
@@ -54,6 +68,13 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
       title: 'Account Settings',
       icon: 'bx-user',
       to: '/account-settings',
+    }"
+  />
+ <VerticalNavLink
+    :item="{
+      title: 'Departamento',
+      icon: 'bx-user-plus',
+      to: '/components/dept',
     }"
   />
  <VerticalNavLink

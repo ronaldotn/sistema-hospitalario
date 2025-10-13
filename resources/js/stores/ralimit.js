@@ -16,7 +16,6 @@ export const useRalimitStore = defineStore("ralimit", () => {
   const model = ref([]);
   const current = ref(null);
   const loading = ref(false);
-
   /* ============================================================
      🔗 CONFIGURACIÓN LOCAL
      ============================================================ */
@@ -69,6 +68,7 @@ export const useRalimitStore = defineStore("ralimit", () => {
       return null;
     }
   };
+
 
   const create = async (payload) => {
     try {

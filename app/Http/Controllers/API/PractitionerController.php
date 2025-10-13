@@ -6,6 +6,7 @@ use Faker\Provider\Base;
 use App\Models\Practitioner;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use App\Models\PractitionerLookup;
 use App\Http\Controllers\API\BaseController as BaseController;
 
 class PractitionerController extends BaseController
@@ -133,4 +134,21 @@ class PractitionerController extends BaseController
     {
         //
     }
+
+    /**
+     * Endpoint para obtener datos mínimos de Practicantes.
+     * Se utiliza para seleccionar un profesional en un formulario de registro relacional (e.g., Citas).
+     */
+   public function lookup(Request $request): JsonResponse
+{
+    $search = trim($request->input('search', ''));
+
+    $query = PractitionerLookup::query()
+        ->when($search, fn($q) => $q->where('full_name', 'like', "%{$search}%"))
+        ->orderBy('full_name')
+        ->limit(20)
+        ->get();
+
+    return $this->sendResponse($query, 'Practicantes filtrados para selección rápida.');
+}
 }

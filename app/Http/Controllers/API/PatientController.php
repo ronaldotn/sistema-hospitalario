@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers\API;
 
+
 use App\Models\Patient;
+use App\Models\AuditEvents;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\API\BaseController;
 
 class PatientController extends BaseController
@@ -12,85 +16,133 @@ class PatientController extends BaseController
     /**
      * Listar todos los pacientes
      */
- public function index(Request $request): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        // ======================================
-        // 🔹 0️⃣ Valores por defecto y seguridad
-        // ======================================
+        // ===========================
+        // 🧭 1️⃣ Parámetros de entrada
+        // ===========================
+        $firstName   = trim($request->input('first_name', ''));  // Nombre
+        $lastName    = trim($request->input('last_name', ''));   // Apellido
+        $identifier  = trim($request->input('identifier', ''));  // Documento
+        $birthdate   = trim($request->input('birthdate', ''));   // Fecha de nacimiento
+        $phone       = trim($request->input('phone', ''));       // Teléfono
+        $address     = trim($request->input('address', ''));     // Dirección
         $count      = (int) ($request->_count ?? 10);            // Registros por página
-        $firstName  = trim($request->input('first_name', ''));   // Filtro nombre
-        $lastName   = trim($request->input('last_name', ''));    // Filtro apellido
-        $active     = $request->has('active') ? $request->boolean('active') : null; // Filtro estado
 
         // ======================================
         // 🔹 1️⃣ Construir query base
         // ======================================
         $query = Patient::query();
 
-        // ======================================
-        // 🔹 2️⃣ Aplicar filtros dinámicos
-        // ======================================
+        // ===========================
+        // 🧮 2️⃣ Construcción dinámica de la consulta
+        // ===========================
+        $query = Patient::query();
+
+        // Filtrar por nombre (LIKE para coincidencias parciales)
         if (!empty($firstName)) {
-            $query->where('first_name', 'like', "%{$firstName}%");
+            $query->where('first_name', 'LIKE', "%{$firstName}%");
         }
 
+        // Filtrar por apellido
         if (!empty($lastName)) {
-            $query->where('last_name', 'like', "%{$lastName}%");
+            $query->where('last_name', 'LIKE', "%{$lastName}%");
         }
 
-        if (!is_null($active)) {
-            $query->where('active', $active);
+        // Filtrar por documento exacto
+        if (!empty($identifier)) {
+            $query->where('identifier', $identifier);
         }
 
-        // 🔮 Futuro: specialty, organization_id, rangos de fechas, etc.
-        // if ($specialty = $request->input('specialty')) {
-        //     $query->where('specialty', $specialty);
-        // }
+        // Filtrar por fecha de nacimiento exacta
+        if (!empty($birthdate)) {
+            $query->whereDate('date_of_birth', $birthdate);
+        }
 
-        // ======================================
-        // 🔹 3️⃣ Ordenamiento jerárquico
-        // ======================================
-        // Primero por fecha de creación DESC, luego por nombre ASC como desempate
-        $query->orderBy('created_at', 'desc')
-            ->orderBy('first_name', 'asc');
+        // Filtrar por teléfono
+        if (!empty($phone)) {
+            $query->where('phone', 'LIKE', "%{$phone}%");
+        }
+
+        // Filtrar por dirección (parcial)
+        if (!empty($address)) {
+            $query->where('address', 'LIKE', "%{$address}%");
+        }
+
+        // Filtros faceted
+        if ($request->filled('is_active')) {
+            $query->whereNotNull('email'); // ejemplo
+        }
+        if ($ageRange = $request->input('ageRange')) {
+            [$min, $max] = explode('-', $ageRange);
+            $query->whereBetween('date_of_birth', [now()->subYears($max), now()->subYears($min)]);
+        }
+
+        // Ordenamiento
+        $query->orderBy('created_at', 'desc');
+
 
         // ======================================
         // 🔹 4️⃣ Paginación automática
         // ======================================
         // paginate() maneja automáticamente offset, total, páginas
-        $practitioners = $query->paginate($count);
+        $patients = $query->paginate($count);
 
         // ======================================
         // 🔹 5️⃣ Devolver respuesta JSON
         // ======================================
-        return $this->sendResponse($practitioners, 'Lista de profesionales filtrada y ordenada');
+        return $this->sendResponse($patients, 'Lista de pacientes filtrada y ordenada');
     }
 
+
     /**
-     * Crear un nuevo paciente
+     * 🔹 Registrar nuevo paciente (FHIR Compatible)
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
-        // Validación mínima de campos esenciales
         $validated = $request->validate([
-            'identifier' => 'required|unique:patients,identifier',
-            'first_name' => 'required|string|max:100',
-            'last_name'  => 'required|string|max:100',
-            'date_of_birth' => 'nullable|date',
-            'gender' => 'nullable|in:male,female,other,unknown',
-            'phone' => 'nullable|string|max:20',
-            'email' => 'nullable|email|max:100',
-            'address' => 'nullable|string',
+            'identifier'     => ['required', 'regex:/^[0-9]{4,10}-[A-Z]{1,3}$/', 'unique:patients,identifier'],
+            'first_name'     => 'required|string|max:100',
+            'last_name'      => 'required|string|max:100',
+            'date_of_birth'  => 'required|date|before:today',
+            'gender'         => 'required|in:male,female,other,unknown',
+            'phone'          => 'nullable|regex:/^[0-9]{7,15}$/',
+            'email'          => 'nullable|email|max:100',
+            'address'        => 'nullable|string|max:255',
         ]);
 
-        // Crear paciente en la base de datos
+        // 🔍 Verificación adicional de duplicados
+        $duplicate = Patient::where('first_name', $validated['first_name'])
+            ->where('last_name', $validated['last_name'])
+            ->where('date_of_birth', $validated['date_of_birth'])
+            ->first();
+
+        if ($duplicate) {
+            return $this->sendError(
+                'Ya existe un paciente con el mismo nombre y fecha de nacimiento.',
+                409,
+                ['existing' => $duplicate]
+            );
+        }
+
+        // Crear paciente
         $patient = Patient::create($validated);
 
-        // Respuesta JSON
-        return response()->json([
-            'message' => 'Paciente creado exitosamente',
-            'data' => $patient
-        ], 201);
+        // 🕵️‍♂️ Auditoría (seguridad y trazabilidad)
+        AuditEvents::create([
+            'user_id'   => Auth::id(),
+            'action'    => 'create',
+            'resource'  => 'Patient/' . $patient->id,
+            'timestamp' => now(),
+            'details'   => [
+                'created_by' => Auth::user()->name ?? 'System',
+                'timestamp'  => now()->toIso8601String(), // ISO8601
+                // 'ip'         => $request->ip(),
+                // 'user_agent' => $request->header('User-Agent'),
+            ],
+        ]);
+
+        return $this->sendResponse($patient, 'Paciente creado exitosamente.', 201);
     }
 
     /**
@@ -170,4 +222,29 @@ class PatientController extends BaseController
             'message' => 'Paciente eliminado exitosamente'
         ], 200);
     }
+    /**
+ * 🔹 Obtener métricas generales de pacientes
+ */
+public function metrics(): JsonResponse
+{
+    // 🔹 Total de pacientes
+    $totalPatients = Patient::count();
+
+    // 🔹 Pacientes que tienen al menos un encounter (consultas/hospitalizaciones)
+    $patientsWithEncounters = Patient::has('encounters')->count();
+
+    // 🔹 Pacientes que tienen alguna condición registrada
+    $patientsWithConditions = Patient::has('conditions')->count();
+
+    // 🔹 Pacientes con observaciones (ej. signos vitales o laboratorios)
+    $patientsWithObservations = Patient::has('observations')->count();
+
+    return $this->sendResponse([
+        'totalPatients'            => $totalPatients,
+        'patientsWithEncounters'   => $patientsWithEncounters,
+        'patientsWithConditions'   => $patientsWithConditions,
+        'patientsWithObservations' => $patientsWithObservations,
+    ], 'Métricas de pacientes obtenidas');
+}
+
 }

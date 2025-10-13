@@ -3,28 +3,32 @@ import { ref } from "vue";
 import { defineStore } from "pinia";
 import Axios from "@/composables/Axios"; 
 import { WarningToast, SuccessToast } from "@/composables/Toast";
-// ⭐ NUEVO: Importar el Store de Carga Global ⭐
-import { useAppStore } from "@/stores/load"; // Asumiendo que tu App Store está aquí
+import { useAppStore } from "@/stores/load"; // Carga global
 
 export const usePatientStore = defineStore("patient", () => {
-    // 🔹 0️⃣ Estado general
+    // 🔹 Estado general
     const patients = ref([]); 
     const current = ref(null); 
-    // MANTENEMOS: 'loading' SÓLO para la carga de la tabla (fetchPatients)
     const loading = ref(false); 
 
-    // 🔹 1️⃣ Información de paginación (Laravel paginate)
+    // 🔹 Información de paginación
     const meta = ref({}); 
     const links = ref([]); 
 
-    // ⭐ NUEVO: Inicializar el App Store Global ⭐
-    const appStore = useAppStore(); // Léase: "app stor"-Almacén de aplicación
+    // 🔹 Métricas de pacientes
+    const metrics = ref({
+        totalPatients: 0,
+        patientsWithEncounters: 0,
+        patientsWithConditions: 0,
+        patientsWithObservations: 0,
+    });
+
+    const appStore = useAppStore(); // Carga global
 
     // ===============================
-    // 🔹 3️⃣ Función – Obtener lista de pacientes (Usa Carga LOCAL)
+    // 🔹 Función – Obtener lista de pacientes
     // ===============================
     const fetchPatients = async (params = {}) => {
-        // 💡 Usa loading.value LOCAL para la tabla
         loading.value = true;
         try {
             const { data } = await Axios.get("patients", { params });
@@ -40,15 +44,27 @@ export const usePatientStore = defineStore("patient", () => {
         } catch (err) {
             WarningToast(err.response?.data?.message || err.message);
         } finally {
-            // 💡 Usa loading.value LOCAL
             loading.value = false;
         }
     };
 
-    // 🔹 4️⃣ Obtener un paciente específico (show) – Usa Carga GLOBAL
+    // 🔹 Obtener métricas de pacientes
+    const fetchMetrics = async () => {
+        appStore.startLoading();
+        try {
+            const { data } = await Axios.get("metrics");
+            metrics.value = data.result || metrics.value;
+        } catch (err) {
+            WarningToast(err.response?.data?.message || err.message);
+        } finally {
+            appStore.stopLoading();
+        }
+    };
+
+    // 🔹 Obtener un paciente específico
     const showPatient = async (uuid) => {
         if (!uuid) return null;
-        appStore.startLoading(); // ⚡ Usa carga GLOBAL (Header)
+        appStore.startLoading();
         try {
             const { data } = await Axios.get(`patients/${uuid}`);
             current.value = data.result || null;
@@ -57,13 +73,13 @@ export const usePatientStore = defineStore("patient", () => {
             WarningToast(err.response?.data?.message || err.message);
             return null;
         } finally {
-            appStore.stopLoading(); // ⚡ Detiene carga GLOBAL
+            appStore.stopLoading();
         }
     };
 
-    // 🔹 5️⃣ Crear paciente (create) – Usa Carga GLOBAL
+    // 🔹 Crear paciente
     const createPatient = async (payload) => {
-        appStore.startLoading(); // ⚡ Usa carga GLOBAL (Header)
+        appStore.startLoading();
         try {
             const { data } = await Axios.post("patients", payload);
             SuccessToast(data.message || "Paciente creado correctamente");
@@ -79,23 +95,19 @@ export const usePatientStore = defineStore("patient", () => {
             }
             return null;
         } finally {
-            appStore.stopLoading(); // ⚡ Detiene carga GLOBAL
+            appStore.stopLoading();
         }
     };
-    
-    // ⭐ ⭐ NOTA IMPORTANTE: Faltaría implementar 'update' y 'remove' si el paciente los tiene, 
-    // y DEBEN usar appStore.startLoading/stopLoading si existen.
 
-    // ===============================
-    // 🔹 Exportar estados y funciones
-    // ===============================
     return {
         patients,
         current,
         loading,
         meta,
         links,
+        metrics,
         fetchPatients,
+        fetchMetrics,
         showPatient,
         createPatient,
     };

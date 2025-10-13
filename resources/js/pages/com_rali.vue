@@ -1,5 +1,5 @@
 <script setup>
-import FiltersPanel from "@/views/pages/patients/filter.vue";
+import FiltersPanel from "@/views/pages/com_rali/filter.vue";
 </script>
 
 <template>
@@ -21,6 +21,7 @@ import FiltersPanel from "@/views/pages/patients/filter.vue";
       <FiltersPanel />
       <!-- Aquí puedes agregar más componentes como tabla, gráficos, etc. -->
     </div>
+    
   </div>
 </template>
 

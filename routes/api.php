@@ -20,9 +20,15 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 Route::get('/patients', [PatientController::class, 'index']);
 Route::post('/patients', [PatientController::class, 'store']);
+Route::get('/metrics', [PatientController::class, 'metrics']); // Métricas generales
 Route::get('/patients/{uuid}', [PatientController::class, 'show']);
+
 Route::get('/practitioners', [PractitionerController::class, 'index']);
 Route::post('/practitioners', [PractitionerController::class, 'store']);
+// La URL final será: /api/practitioners/lookup
+Route::get('practitioners/lookup', [PractitionerController::class, 'lookup'])
+    ->name('practitioner.lookup'); // Alias claro, profesional y en CamelCase.
+
 Route::apiResource('organizations', OrganizationController::class)
     ->parameters(['organizations' => 'uuid']);
 Route::apiResource('encounters', EncounterController::class);
