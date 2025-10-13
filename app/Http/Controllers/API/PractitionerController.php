@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\API;
 
 use Faker\Provider\Base;
+use App\Models\AuditEvents;
 use App\Models\Practitioner;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Models\PractitionerLookup;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\API\BaseController as BaseController;
 
 class PractitionerController extends BaseController
@@ -106,6 +108,19 @@ class PractitionerController extends BaseController
         ]);
 
         $practitioner = Practitioner::create($validated);
+              // 🕵️‍♂️ Auditoría (seguridad y trazabilidad)
+        AuditEvents::create([
+            'user_id'   => Auth::id(),
+            'action'    => 'create',
+            'resource'  => 'Practitioner/' . $practitioner->id,
+            'timestamp' => now(),
+            'details'   => [
+                'created_by' => Auth::user()->name ?? 'System',
+                'timestamp'  => now()->toIso8601String(), // ISO8601
+                // 'ip'         => $request->ip(),
+                // 'user_agent' => $request->header('User-Agent'),
+            ],
+        ]);
 
         return $this->sendResponse($practitioner, 'Profesional creado correctamente');
     }
