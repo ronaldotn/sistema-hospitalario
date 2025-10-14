@@ -22,6 +22,8 @@ Route::get('/patients', [PatientController::class, 'index']);
 Route::post('/patients', [PatientController::class, 'store']);
 Route::get('/metrics', [PatientController::class, 'metrics']); // Métricas generales
 Route::get('/patients/{uuid}', [PatientController::class, 'show']);
+Route::apiResource('ralimits', ralimitController::class);
+Route::apiResource('ralimits', ralimitController::class);
 
 Route::get('/practitioners', [PractitionerController::class, 'index']);
 Route::post('/practitioners', [PractitionerController::class, 'store']);
@@ -35,3 +37,5 @@ Route::apiResource('encounters', EncounterController::class);
 Route::apiResource('diagnostics', DiagnosticReportController::class);
 Route::apiResource('conditions', ConditionController::class);
 Route::apiResource('ralimits', ralimitController::class);
+
+

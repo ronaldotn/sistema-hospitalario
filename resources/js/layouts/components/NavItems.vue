@@ -86,6 +86,13 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
   />
  <VerticalNavLink
     :item="{
+      title: 'Duplicados',
+      icon: 'bx-user-plus',
+      to: '/duplicados/index',
+    }"
+  />
+ <VerticalNavLink
+    :item="{
       title: 'Encounters',
       icon: 'bx-user-plus',
       to: '/encounters/index',
